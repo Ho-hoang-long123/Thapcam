@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Acc Uy Tín - Thập Cẩm Store</title>
+    <title>Thập Cẩm Store - Shop Acc Uy Tín</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -135,6 +135,223 @@
         <div class="auth-box" style="text-align: left;">
             <h3>Xác nhận mua tài khoản</h3>
             <p id="buyProductTitle" style="font-weight: bold; font-size: 15px; color: #2f3640;"></p>
+            <p id="buyProductPrice" style="color: var(--shop-primary); font-weight: 800; font-size: 16px;"></p>
+            <p style="font-size: 13px; color: var(--shop-secondary);">Vui lòng thanh toán và liên hệ Admin với mã giao dịch: <b style="color:black;" id="buyTransferContent"></b></p>
+            <button type="button" class="shop-btn" style="width: 100%; margin-top: 10px; background: #2ed573;" onclick="alert('Đã gửi yêu cầu mua acc! Admin sẽ liên hệ giao thông tin tài khoản cho bạn.'); dongBuyModal();">Xác nhận đã thanh toán</button>
+            <button type="button" class="shop-btn" style="width: 100%; margin-top: 8px; background: #718093;" onclick="dongBuyModal()">Hủy bỏ</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <h2><i class="fa-solid fa-store"></i> Thập Cẩm Store</h2>
+        <div class="user-profile-badge" onclick="moProfileModal()">
+            <img id="headerAvatar" src="https://via.placeholder.com/40" alt="Ava">
+            <span id="headerName">Khách</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: var(--shop-secondary);"></i>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Khung Đăng Sản Phẩm (CHỈ HIỂN THỊ KHI ĐĂNG NHẬP ADMIN: hoanglong19523) -->
+        <div id="adminCreateSection" class="card admin-box" style="display: none;">
+            <h3><i class="fa-solid fa-circle-plus"></i> Đăng Bán Tài Khoản Mới (Dành cho Admin)</h3>
+            <div class="form-grid">
+                <input type="text" id="prodName" class="shop-input" placeholder="Tên tài khoản / Tựa game (VD: Acc Liên Quân 50 Tướng)">
+                <input type="text" id="prodPrice" class="shop-input" placeholder="Giá tiền (VD: 200.000 đ)">
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--shop-secondary); display: block; margin-bottom: 5px;">Hình ảnh mô tả acc (Bắt buộc):</label>
+                <input type="file" id="prodImageFile" accept="image/*" onchange="previewProductImage(event)" class="shop-input" style="padding: 6px;">
+                <img id="prodImagePreviewImg" style="width: 100px; height: 70px; object-fit: cover; margin-top: 8px; border-radius: 4px; display: none;" alt="Preview">
+            </div>
+
+            <textarea id="prodDesc" class="shop-textarea" placeholder="Mô tả chi tiết acc: Rank hiện tại, số skin, thông tin đăng ký..."></textarea>
+            <button type="button" class="shop-btn" style="margin-top: 10px; width: 100%;" onclick="dangSanPhamMoi()">Đăng Bán Sản Phẩm Lên Shop</button>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="shop-title-section">
+            <h3><i class="fa-solid fa-fire" style="color:var(--shop-primary);"></i> Danh Sách Acc Đang Bán</h3>
+            <span style="font-size: 13px; color: var(--shop-secondary);" id="totalProductsCount">Đang cập nhật...</span>
+        </div>
+
+        <div id="productFeed" class="product-grid">
+            <div class="card" style="grid-column: 1 / -1; text-align: center; color: gray;">Đang tải danh sách tài khoản...</div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = JSON.parse(localStorage.getItem('thapcam_current_user')) || null;
+        let tempAvatarBase64 = '';
+        let tempNewAvatarBase64 = '';
+        let tempProductImageBase64 = '';
+
+        const ADMIN_USERNAME = 'hoanglong19523';
+
+        window.onload = function() {
+            try {
+                if (currentUser) {
+                    document.getElementById('authModal').style.display = 'none';
+                    hienThiUserHeader();
+                    kiemTraQuyenAdmin();
+                } else {
+                    document.getElementById('authModal').style.display = 'flex';
+                }
+                layDanhSachSanPham();
+            } catch (err) {
+                console.error("Lỗi khởi tạo:", err);
+            }
+        };
+
+        function kiemTraQuyenAdmin() {
+            if (currentUser && currentUser.name === ADMIN_USERNAME) {
+                document.getElementById('adminCreateSection').style.display = 'block';
+            } else {
+                document.getElementById('adminCreateSection').style.display = 'none';
+            }
+        }
+
+        function chuyenForm(type) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'none';
+
+            if (type === 'register') {
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Tạo tài khoản mới';
+            } else if (type === 'forgot') {
+                document.getElementById('forgotForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Khôi phục mật khẩu';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Đăng nhập Shop Acc';
+            }
+        }
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarBase64 = e.target.result;
+                    document.getElementById('previewImg').src = tempAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewNewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempNewAvatarBase64 = e.target.result;
+                    document.getElementById('profileModalAvatar').src = tempNewAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewProductImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempProductImageBase64 = e.target.result;
+                    const previewImg = document.getElementById('prodImagePreviewImg');
+                    previewImg.src = tempProductImageBase64;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function xuLyDangKy() {
+            try {
+                const name = document.getElementById('regName').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const password = document.getElementById('regPass').value.trim();
+                const avatar = tempAvatarBase64 || 'https://via.placeholder.com/150';
+
+                if (!name || !email || !password) {
+                    alert('Vui lòng điền đầy đủ Tên, Email và Mật khẩu!');
+                    return;
+                }
+
+                const { error } = await _supabase
+                    .from('users')
+                    .insert([{ name, email, password, avatar }]);
+
+                if (error) {
+                    alert('Lỗi đăng ký: ' + error.message);
+                } else {
+                    alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                    chuyenForm('login');
+                }
+            } catch (err) {
+                alert('Có lỗi xảy ra: ' + err.message);
+            }
+        }
+
+        async function xuLyDangNhap() {
+            try {
+                const userInput = document.getElementById('loginUser').value.trim();
+                const passwordInput = document.getElementById('loginPass').value.trim();
+
+                if (!userInput || !passwordInput) {
+                    alert('Vui lòng nhập tài khoản và mật khẩu!');
+                    return;
+                }
+
+                const { data, error } = await _supabase
+                    .from('users')
+                    .select('*')
+                    .or(`name.eq.${userInput},email.eq.${userInput}`)
+                    .eq('password', passwordInput);
+
+                if (error) {
+                    alert('Lỗi kết nối CSDL: ' + error.message);
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    alert('Sai tên đăng nhập hoặc mật khẩu!');
+                    return;
+                }
+
+                currentUser = data[0];
+                localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+                document.getElementById('authModal').style.display = 'none';
+                hienThiUserHeader();
+                kiemTraQuyenAdmin();
+                location.reload();
+            } catch (err) {
+                alert('Lỗi đăng nhập: ' + err.message);
+            }
+        }
+
+        async function xuLyDoiMatKhauMoi() {
+            try {
+                const email = document.getElementById('forgotEmail').value.trim();
+                const newPassword = document.getElementById('newPass').value.trim();
+
+                if (!email || !newPassword) {
+                    alert('Vui lòng nhập đầy đủ Email và Mật khẩu mới!');
+                    return;
+                }
+
+                const { error: updateError } = await _supabase
+                    ="font-weight: bold; font-size: 15px; color: #2f3640;"></p>
             <p id="buyProductPrice" style="color: var(--shop-primary); font-weight: 800; font-size: 16px;"></p>
             <p style="font-size: 13px; color: var(--shop-secondary);">Vui lòng thanh toán và liên hệ Admin với mã giao dịch: <b style="color:black;" id="buyTransferContent"></b></p>
             <button type="button" class="shop-btn" style="width: 100%; margin-top: 10px; background: #2ed573;" onclick="alert('Đã gửi yêu cầu mua acc! Admin sẽ liên hệ giao thông tin tài khoản cho bạn.'); dongBuyModal();">Xác nhận đã thanh toán</button>
