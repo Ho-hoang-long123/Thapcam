@@ -17,16 +17,12 @@
             <h1 id="auth-title" class="text-2xl font-bold mb-6 text-center text-blue-600">Đăng Nhập ChatApp</h1>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="email" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm font-medium text-gray-700">Tên tài khoản (Username)</label>
+                    <input type="text" id="username" placeholder="Nhập tên của bạn..." class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                    <input type="password" id="password" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div id="username-box" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700">Tên hiển thị (Username)</label>
-                    <input type="text" id="username" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="password" id="password" placeholder="Nhập mật khẩu..." class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <button onclick="handleAuth()" id="auth-btn" class="w-full bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 transition">Đăng Nhập</button>
                 <p class="text-center text-sm text-gray-600">
@@ -71,15 +67,11 @@
 
             <!-- Khung nhập nội dung -->
             <div id="chat-input-box" class="p-4 bg-white border-t hidden flex items-center space-x-2">
-                <!-- Chọn file ảnh/video -->
                 <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-gray-600 transition">
                     📁
                     <input type="file" id="media-file" accept="image/*,video/*" class="hidden" onchange="previewMedia()">
                 </label>
-
-                <!-- Tên file đang chọn -->
                 <span id="file-name" class="text-xs text-blue-600 truncate max-w-[100px]"></span>
-
                 <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onkeypress="if(event.key === 'Enter') sendMessage()">
                 <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Gửi</button>
             </div>
@@ -115,38 +107,55 @@
             isSignUpMode = !isSignUpMode;
             document.getElementById('auth-title').innerText = isSignUpMode ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập ChatApp';
             document.getElementById('auth-btn').innerText = isSignUpMode ? 'Đăng Ký' : 'Đăng Nhập';
-            document.getElementById('username-box').classList.toggle('hidden', !isSignUpMode);
             document.getElementById('auth-switch-text').innerText = isSignUpMode ? 'Đã có tài khoản?' : 'Chưa có tài khoản?';
             document.getElementById('auth-switch-btn').innerText = isSignUpMode ? 'Đăng nhập ngay' : 'Đăng ký ngay';
         }
 
-        // Xử lý xác thực (Auth)
+        // Biến đổi tên thành email giả lập hệ thống (VD: "namcute" -> "namcute@chatapp.local")
+        function getFakeEmail(username) {
+            return `${username.trim().toLowerCase().replace(/\s+/g, '')}@chatapp.local`;
+        }
+
+        // Xử lý xác thực (Auth) chỉ dùng Username và Password
         async function handleAuth() {
-            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
 
-            if (!email || !password) return alert('Vui lòng điền đầy đủ email và mật khẩu!');
+            if (!username || !password) return alert('Vui lòng điền đầy đủ tên và mật khẩu!');
+
+            const fakeEmail = getFakeEmail(username);
 
             if (isSignUpMode) {
-                const username = document.getElementById('username').value.trim();
-                if (!username) return alert('Vui lòng nhập tên hiển thị!');
-
-                const { data, error } = await supabaseClient.auth.signUp({ email, password });
-                if (error) return alert(error.message);
+                // Đăng ký tài khoản
+                const { data, error } = await supabaseClient.auth.signUp({ 
+                    email: fakeEmail, 
+                    password: password 
+                });
+                
+                if (error) return alert('Lỗi đăng ký: ' + error.message);
 
                 if (data.user) {
-                    // Lưu profile gắn liền với ID của Auth
-                    const { error: profileError } = await supabaseClient.from('profiles').insert([{ id: data.user.id, username }]);
+                    // Lưu thông tin profile vào bảng profiles
+                    const { error: profileError } = await supabaseClient.from('profiles').insert([{ 
+                        id: data.user.id, 
+                        username: username 
+                    }]);
+                    
                     if (profileError) {
                         alert('Lỗi tạo profile: ' + profileError.message);
                         return;
                     }
-                    alert('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
+                    alert('Đăng ký thành công! Hãy chuyển sang Đăng nhập.');
                     toggleAuthMode();
                 }
             } else {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) return alert(error.message);
+                // Đăng nhập tài khoản
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+                    email: fakeEmail, 
+                    password: password 
+                });
+                
+                if (error) return alert('Sai tên tài khoản hoặc mật khẩu!');
                 currentUser = data.user;
                 showChatScreen();
             }
@@ -167,8 +176,8 @@
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
 
-            const { data, error } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();
-            document.getElementById('current-user-name').innerText = data ? data.username : currentUser.email;
+            const { data } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();
+            document.getElementById('current-user-name').innerText = data ? data.username : 'Người dùng';
 
             loadUsers();
         }
@@ -304,7 +313,6 @@
             let media_url = null;
             let media_type = null;
 
-            // Xử lý upload media lên Supabase Storage bucket 'chat-media'
             if (selectedFile) {
                 const fileExt = selectedFile.name.split('.').pop();
                 const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -331,7 +339,6 @@
                 document.getElementById('file-name').innerText = '';
             }
 
-            // Ghi dữ liệu vào bảng messages
             const { error } = await supabaseClient.from('messages').insert([
                 {
                     sender_id: currentUser.id,
@@ -349,7 +356,6 @@
             }
         }
 
-        // Chống lỗi XSS cơ bản
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
