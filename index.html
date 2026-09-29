@@ -87,20 +87,12 @@
                 <span class="switch-auth" onclick="chuyenForm('login')">Đã có tài khoản? Đăng nhập</span>
             </div>
 
-            <!-- 3. FORM QUÊN MẬT KHẨU -->
+            <!-- 3. FORM QUÊN MẬT KHẨU / ĐỔI MẬT KHẨU TRỰC TIẾP -->
             <div id="forgotForm" style="display: none;">
-                <p style="font-size: 13px; color: var(--fb-secondary);">Nhập email đã đăng ký để nhận mã khôi phục mật khẩu.</p>
+                <p style="font-size: 13px; color: var(--fb-secondary);">Nhập Email tài khoản cần đổi mật khẩu mới.</p>
                 <input type="email" id="forgotEmail" class="auth-input" placeholder="Nhập địa chỉ Email của bạn">
-                <button class="fb-btn" style="width: 100%; padding: 10px;" onclick="guiMaKhoiPhuc()">Gửi mã xác nhận</button>
-                <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
-            </div>
-
-            <!-- 4. FORM NHẬP MÃ OTP & ĐỔI MẬT KHẨU MỚI -->
-            <div id="resetForm" style="display: none;">
-                <p style="font-size: 13px; color: var(--fb-secondary);">Nhập mã xác thực (OTP) đã gửi qua email và mật khẩu mới của bạn.</p>
-                <input type="text" id="otpCode" class="auth-input" placeholder="Nhập mã OTP từ email">
-                <input type="password" id="newPass" class="auth-input" placeholder="Mật khẩu mới">
-                <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="xacNhanDoiMatKhau()">Đổi mật khẩu mới</button>
+                <input type="password" id="newPass" class="auth-input" placeholder="Nhập mật khẩu mới">
+                <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="xuLyDoiMatKhauMoi()">Cập nhật mật khẩu mới</button>
                 <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
             </div>
         </div>
@@ -155,6 +147,252 @@
             }
             layBaiViet();
         };
+
+        function chuyenForm(type) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'none';
+
+            if (type === 'register') {
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Tạo tài khoản mới';
+            } else if (type === 'forgot') {
+                document.getElementById('forgotForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Khôi phục mật khẩu';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Đăng nhập Thập Cẩm';
+            }
+        }
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarBase64 = e.target.result;
+                    document.getElementById('previewImg').src = tempAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewMedia(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempMediaBase64 = e.target.result;
+                    document.getElementById('selectedMediaPreview').innerText = "Đã chọn: " + file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- ĐĂNG KÝ TÀI KHOẢN ---
+        async function xuLyDangKy() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPass').value.trim();
+            const avatar = tempAvatarBase64 || 'https://via.placeholder.com/150';
+
+            if (!name || !email || !password) {
+                alert('Vui lòng điền đầy đủ Tên, Email và Mật khẩu!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('users')
+                .insert([{ name, email, password, avatar }]);
+
+            if (error) {
+                alert('Lỗi đăng ký (Email có thể đã tồn tại): ' + error.message);
+            } else {
+                alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                chuyenForm('login');
+            }
+        }
+
+        // --- ĐĂNG NHẬP ---
+        async function xuLyDangNhap() {
+            const userInput = document.getElementById('loginUser').value.trim();
+            const passwordInput = document.getElementById('loginPass').value.trim();
+
+            if (!userInput || !passwordInput) {
+                alert('Vui lòng nhập tài khoản và mật khẩu!');
+                return;
+            }
+
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .or(`name.eq.${userInput},email.eq.${userInput}`)
+                .eq('password', passwordInput);
+
+            if (error || !data || data.length === 0) {
+                alert('Sai tên đăng nhập hoặc mật khẩu!');
+                return;
+            }
+
+            currentUser = data[0];
+            localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+            document.getElementById('authModal').style.display = 'none';
+            hienThiUserHeader();
+            location.reload();
+        }
+
+        // --- ĐỔI MẬT KHẨU MỚI TRỰC TIẾP QUA EMAIL ---
+        async function xuLyDoiMatKhauMoi() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const newPassword = document.getElementById('newPass').value.trim();
+
+            if (!email || !newPassword) {
+                alert('Vui lòng nhập đầy đủ Email và Mật khẩu mới!');
+                return;
+            }
+
+            // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu không
+            const { data: checkUser, error: checkError } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('email', email);
+
+            if (checkError || !checkUser || checkUser.length === 0) {
+                alert('Không tìm thấy tài khoản với email này!');
+                return;
+            }
+
+            // Tiến hành cập nhật mật khẩu mới vào bảng users
+            const { error: updateError } = await _supabase
+                .from('users')
+                .update({ password: newPassword })
+                .eq('email', email);
+
+            if (updateError) {
+                alert('Lỗi cập nhật mật khẩu: ' + updateError.message);
+            } else {
+                alert('Đổi mật khẩu thành công! Hãy đăng nhập lại bằng mật khẩu mới.');
+                chuyenForm('login');
+            }
+        }
+
+        function dangXuat() {
+            if (confirm('Bạn có muốn đăng xuất tài khoản không?')) {
+                localStorage.removeItem('thapcam_current_user');
+                location.reload();
+            }
+        }
+
+        function hienThiUserHeader() {
+            if (currentUser) {
+                document.getElementById('headerName').innerText = currentUser.name;
+                document.getElementById('headerAvatar').src = currentUser.avatar || 'https://via.placeholder.com/40';
+            }
+        }
+
+        // --- ĐĂNG BÀI VIẾT ---
+        async function dangBai() {
+            if (!currentUser) {
+                document.getElementById('authModal').style.display = 'flex';
+                return;
+            }
+
+            const content = document.getElementById('contentInput').value.trim();
+            if (!content && !tempMediaBase64) {
+                alert('Vui lòng nhập nội dung hoặc chọn ảnh/video!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('posts')
+                .insert([{
+                    author: currentUser.name,
+                    avatar: currentUser.avatar,
+                    content: content,
+                    media_url: tempMediaBase64,
+                    likes: 0
+                }]);
+
+            if (error) {
+                alert('Lỗi khi đăng bài: ' + error.message);
+            } else {
+                document.getElementById('contentInput').value = '';
+                tempMediaBase64 = '';
+                document.getElementById('selectedMediaPreview').innerText = '';
+                layBaiViet();
+            }
+        }
+
+        // --- TẢI BẢNG TIN ---
+        async function layBaiViet() {
+            const { data, error } = await _supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const feedDiv = document.getElementById('feed');
+            if (error) {
+                feedDiv.innerHTML = '<div class="card">Lỗi tải dữ liệu: ' + error.message + '</div>';
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                feedDiv.innerHTML = '<div class="card" style="text-align:center; color:gray;">Chưa có bài viết nào.</div>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(post => {
+                let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('vi-VN') : '';
+                let avatar = post.avatar || 'https://via.placeholder.com/40';
+                
+                let mediaHtml = '';
+                if (post.media_url) {
+                    if (post.media_url.startsWith('data:video')) {
+                        mediaHtml = `<video src="${post.media_url}" controls class="post-media"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${post.media_url}" class="post-media" alt="Media">`;
+                    }
+                }
+
+                html += `
+                    <div class="card">
+                        <div class="post-header">
+                            <img src="${avatar}" class="post-avatar" alt="Ava">
+                            <div>
+                                <div class="post-author">${escapeHtml(post.author)}</div>
+                                <div class="post-time">${timeStr}</div>
+                            </div>
+                        </div>
+                        <div class="post-content">${escapeHtml(post.content)}</div>
+                        ${mediaHtml}
+                        <div class="post-actions-bar">
+                            <button class="action-option" onclick="thichBai('${post.id}', ${post.likes || 0})">
+                                <i class="fa-regular fa-thumbs-up"></i> Thích (${post.likes || 0})
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            feedDiv.innerHTML = html;
+        }
+
+        async function thichBai(postId, currentLikes) {
+            await _supabase
+                .from('posts')
+                .update({ likes: currentLikes + 1 })
+                .eq('id', postId);
+            layBaiViet();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
+};
 
         function chuyenForm(type) {
             document.getElementById('loginForm').style.display = 'none';
