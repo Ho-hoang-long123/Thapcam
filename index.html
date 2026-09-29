@@ -3,236 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chatbot Supabase</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Thư viện Supabase JS client -->
+    <title>Web Chat Supabase</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-    <div class="chat-container">
-        <header>
-            <h2>🤖 AI Assistant</h2>
-        </header>
-        <div id="chat-box" class="chat-box">
-            <!-- Tin nhắn sẽ hiện ở đây -->
-        </div>
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Nhập tin nhắn..." autocomplete="off">
-            <button id="send-btn">Gửi</button>
+<body class="bg-slate-100 h-screen flex flex-col">
+
+    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <div id="auth-screen" class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+            <h1 id="auth-title" class="text-2xl font-bold mb-6 text-center text-blue-600">Đăng Nhập ChatApp</h1>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                    <input type="password" id="password" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div id="username-box" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Tên hiển thị (Username)</label>
+                    <input type="text" id="username" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <button onclick="handleAuth()" id="auth-btn" class="w-full bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 transition">Đăng Nhập</button>
+                <p class="text-center text-sm text-gray-600">
+                    <span id="auth-switch-text">Chưa có tài khoản?</span> 
+                    <button onclick="toggleAuthMode()" id="auth-switch-btn" class="text-blue-600 font-semibold hover:underline">Đăng ký ngay</button>
+                </p>
+            </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
-<img id="navAvatar" src="https://via.placeholder.com/32" alt="Avatar">
-            <span id="navUsername">Khách vãng lai</span>
-            <i class="fa-solid fa-power-off" style="color: var(--danger); font-size: 12px; margin-left: 5px;"></i>
-        </div>
-    </header>
+    <!-- GIAO DIỆN CHÍNH (SAU KHI ĐĂNG NHẬP) -->
+    <div id="chat-screen" class="hidden flex-1 flex overflow-hidden">
+        <!-- Sidebar danh sách người dùng -->
+        <div class="w-1/3 bg-white border-r flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <div>
+                    <h2 id="current-user-name" class="font-bold text-gray-800">Đang tải...</h2>
+                    <span class="text-xs text-green-500 font-medium">● Online</span>
+                </div>
+                <button onclick="logout()" class="text-sm text-red-500 hover:underline">Đăng xuất</button>
+            </div>
+            
+            <div class="p-3 border-b">
+                <input type="text" id="search-user" placeholder="Tìm kiếm người dùng..." class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
 
-    <!-- Giao Diện Chính -->
-    <div class="nexus-container">
-        
-        <!-- BẢNG ĐĂNG BÀI ADMIN (CHỈ HOANGLONG19523 MỚI THẤY) -->
-        <div id="adminPanel" class="nexus-admin-panel">
-            <h2><i class="fa-solid fa-circle-plus"></i> KHU VỰC QUẢN TRỊ - ĐĂNG BÁN TÀI KHOẢN</h2>
-            <div class="nexus-input-group">
-                <label>Tiêu đề / Tên Tài Khoản</label>
-                <input type="text" id="prodTitle" class="nexus-control" placeholder="Ví dụ: Acc Liên Quân VIP Full Skin Cực Hiếm...">
+            <div id="users-list" class="flex-1 overflow-y-auto divide-y">
+                <!-- Danh sách user render ở đây -->
             </div>
-            <div class="nexus-input-group">
-                <label>Giá Bán (VNĐ)</label>
-                <input type="text" id="prodPrice" class="nexus-control" placeholder="Ví dụ: 250.000đ">
-            </div>
-            <div class="nexus-input-group">
-                <label>Mô Tả Chi Tiết Acc</label>
-                <textarea id="prodDesc" class="nexus-control" placeholder="Rank hiện tại, bảng ngọc, thông tin bảo mật, trắng thông tin..."></textarea>
-            </div>
-            <div class="nexus-input-group">
-                <label>Hình Ảnh Minh Họa</label>
-                <input type="file" id="prodImgFile" accept="image/*" class="nexus-control" onchange="chonAnhSanPham(event)" style="padding: 8px;">
-            </div>
-            <div id="previewContainer" style="margin-bottom: 15px;"></div>
-            <button class="nexus-btn" onclick="dangBanAccMoi()"><i class="fa-solid fa-upload"></i> Đăng Bán Lên Shop</button>
         </div>
 
-        <!-- DANH SÁCH SẢN PHẨM -->
-        <div class="nexus-grid-title">DANH SÁCH TÀI KHOẢN SẴN SÀNG</div>
-        <div id="productFeed" class="nexus-product-grid">
-            <div style="color: var(--text-muted);">Đang tải dữ liệu cửa hàng...</div>
+        <!-- Khung chat chi tiết -->
+        <div class="flex-2 flex flex-col bg-slate-50 flex-1">
+            <div id="chat-header" class="p-4 bg-white border-b font-bold text-gray-700">
+                Chọn một người bạn để bắt đầu nhắn tin
+            </div>
+
+            <!-- Khung chứa tin nhắn -->
+            <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">
+                <div class="text-center text-gray-400 my-auto">Chưa có cuộc trò chuyện nào được chọn.</div>
+            </div>
+
+            <!-- Khung nhập nội dung -->
+            <div id="chat-input-box" class="p-4 bg-white border-t hidden flex items-center space-x-2">
+                <!-- Chọn file ảnh/video -->
+                <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-gray-600 transition">
+                    📁
+                    <input type="file" id="media-file" accept="image/*,video/*" class="hidden" onchange="previewMedia()">
+                </label>
+
+                <!-- Tên file đang chọn -->
+                <span id="file-name" class="text-xs text-blue-600 truncate max-w-[100px]"></span>
+
+                <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Gửi</button>
+            </div>
         </div>
     </div>
 
-    <!-- Tích hợp thư viện Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Script xử lý -->
     <script>
-        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+        // THAY THẾ THÔNG TIN SUPABASE CỦA BẠN VÀO ĐÂY
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let activeUser = JSON.parse(localStorage.getItem('nexus_user_session')) || null;
-        let base64AvatarTemp = '';
-        let base64ProductImgTemp = '';
+        let currentUser = null;
+        let activeReceiver = null;
+        let isSignUpMode = false;
+        let selectedFile = null;
+        let currentSubscription = null;
 
-        window.onload = () => {
-            kiemTraTrangThaiDangNhap();
-            taiDanhSachSanPham();
-        };
+        // Kiểm tra phiên đăng nhập
+        async function checkUser() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showChatScreen();
+            }
+        }
+        checkUser();
 
-        // Chuyển đổi qua lại các tab Form Auth
-        function doiTabAuth(tabName) {
-            ['boxLogin', 'boxRegister', 'boxForgot', 'boxReset'].forEach(id => {
-                document.getElementById(id).style.display = 'none';
-            });
-            const titles = {
-                'login': 'ĐĂNG NHẬP HỆ THỐNG',
-                'register': 'TẠO TÀI KHOẢN MỚI',
-                'forgot': 'KHÔI PHỤC MẬT KHẨU',
-                'reset': 'XÁC THỰC MÃ OTP'
-            };
-            document.getElementById('modalTitle').innerText = titles[tabName];
-            if(tabName === 'login') document.getElementById('boxLogin').style.display = 'block';
-            if(tabName === 'register') document.getElementById('boxRegister').style.display = 'block';
-            if(tabName === 'forgot') document.getElementById('boxForgot').style.display = 'block';
-            if(tabName === 'reset') document.getElementById('boxReset').style.display = 'block';
+        // Chuyển chế độ Đăng nhập <-> Đăng ký
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-title').innerText = isSignUpMode ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập ChatApp';
+            document.getElementById('auth-btn').innerText = isSignUpMode ? 'Đăng Ký' : 'Đăng Nhập';
+            document.getElementById('username-box').classList.toggle('hidden', !isSignUpMode);
+            document.getElementById('auth-switch-text').innerText = isSignUpMode ? 'Đã có tài khoản?' : 'Chưa có tài khoản?';
+            document.getElementById('auth-switch-btn').innerText = isSignUpMode ? 'Đăng nhập ngay' : 'Đăng ký ngay';
         }
 
-        function kiemTraTrangThaiDangNhap() {
-            if (!activeUser) {
-                document.getElementById('authModal').style.display = 'flex';
-                doiTabAuth('login');
-            } else {
-                document.getElementById('authModal').style.display = 'none';
-                document.getElementById('navUsername').innerText = activeUser.name;
-                document.getElementById('navAvatar').src = activeUser.avatar || 'https://via.placeholder.com/32';
+        // Xử lý xác thực (Auth)
+        async function handleAuth() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
 
-                // Bật bảng admin nếu chính xác tài khoản yêu cầu
-                if (activeUser.name === 'hoanglong19523' && activeUser.password === 'Long1510@') {
-                    document.getElementById('adminPanel').style.display = 'block';
+            if (!email || !password) return alert('Vui lòng điền đầy đủ email và mật khẩu!');
+
+            if (isSignUpMode) {
+                const username = document.getElementById('username').value.trim();
+                if (!username) return alert('Vui lòng nhập tên hiển thị!');
+
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) return alert(error.message);
+
+                if (data.user) {
+                    // Lưu profile gắn liền với ID của Auth
+                    const { error: profileError } = await supabaseClient.from('profiles').insert([{ id: data.user.id, username }]);
+                    if (profileError) {
+                        alert('Lỗi tạo profile: ' + profileError.message);
+                        return;
+                    }
+                    alert('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
+                    toggleAuthMode();
+                }
+            } else {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) return alert(error.message);
+                currentUser = data.user;
+                showChatScreen();
+            }
+        }
+
+        // Đăng xuất
+        async function logout() {
+            if (currentSubscription) supabaseClient.removeChannel(currentSubscription);
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            activeReceiver = null;
+            document.getElementById('chat-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+
+        // Hiển thị giao diện chat chính
+        async function showChatScreen() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+
+            const { data, error } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();
+            document.getElementById('current-user-name').innerText = data ? data.username : currentUser.email;
+
+            loadUsers();
+        }
+
+        // Lấy danh sách người dùng khác
+        async function loadUsers() {
+            const { data, error } = await supabaseClient.from('profiles').select('*').neq('id', currentUser.id);
+            if (error) return;
+
+            const listEl = document.getElementById('users-list');
+            listEl.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                listEl.innerHTML = '<div class="p-4 text-center text-gray-400 text-sm">Chưa có người dùng nào khác.</div>';
+                return;
+            }
+
+            data.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'p-3 hover:bg-gray-100 cursor-pointer flex items-center space-x-3 transition';
+                div.innerHTML = `
+                    <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                        ${user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-800">${user.username || 'Không tên'}</div>
+                        <div class="text-xs text-gray-400">Nhấn để nhắn tin</div>
+                    </div>
+                `;
+                div.onclick = () => selectReceiver(user);
+                listEl.appendChild(div);
+            });
+        }
+
+        // Chọn người nhận tin nhắn
+        function selectReceiver(user) {
+            activeReceiver = user;
+            document.getElementById('chat-header').innerText = `Đang chat với: ${user.username}`;
+            document.getElementById('chat-input-box').classList.remove('hidden');
+            loadMessages();
+            subscribeToMessages();
+        }
+
+        // Tải lịch sử tin nhắn
+        async function loadMessages() {
+            if (!activeReceiver) return;
+
+            const { data, error } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeReceiver.id}),and(sender_id.eq.${activeReceiver.id},receiver_id.eq.${currentUser.id})`)
+                .order('created_at', { ascending: true });
+
+            if (error) return;
+
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+
+            data.forEach(msg => appendMessage(msg));
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Thêm một tin nhắn vào khung hiển thị
+        function appendMessage(msg) {
+            const container = document.getElementById('messages-container');
+            const isMe = msg.sender_id === currentUser.id;
+
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+
+            let mediaHTML = '';
+            if (msg.media_url) {
+                if (msg.media_type === 'image') {
+                    mediaHTML = `<img src="${msg.media_url}" class="max-w-xs rounded-lg mt-1 mb-1 shadow">`;
+                } else if (msg.media_type === 'video') {
+                    mediaHTML = `<video src="${msg.media_url}" controls class="max-w-xs rounded-lg mt-1 mb-1 shadow"></video>`;
                 }
             }
+
+            div.innerHTML = `
+                <div class="max-w-md px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}">
+                    ${msg.content ? `<span>${escapeHtml(msg.content)}</span>` : ''}
+                    ${mediaHTML}
+                </div>
+                <span class="text-[10px] text-gray-400 mt-1">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
-        function chonAvatar(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    base64AvatarTemp = evt.target.result;
-                    document.getElementById('regAvatarPreview').src = base64AvatarTemp;
-                };
-                reader.readAsDataURL(file);
+        // Lắng nghe realtime tin nhắn mới
+        function subscribeToMessages() {
+            if (currentSubscription) {
+                supabaseClient.removeChannel(currentSubscription);
+            }
+
+            currentSubscription = supabaseClient
+                .channel('public:messages')
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'messages' 
+                }, payload => {
+                    const msg = payload.new;
+                    if (
+                        activeReceiver && 
+                        ((msg.sender_id === currentUser.id && msg.receiver_id === activeReceiver.id) ||
+                         (msg.sender_id === activeReceiver.id && msg.receiver_id === currentUser.id))
+                    ) {
+                        appendMessage(msg);
+                    }
+                })
+                .subscribe();
+        }
+
+        // Xem trước tên file chọn tải lên
+        function previewMedia() {
+            const fileInput = document.getElementById('media-file');
+            selectedFile = fileInput.files[0];
+            if (selectedFile) {
+                document.getElementById('file-name').innerText = selectedFile.name;
             }
         }
 
-        function chonAnhSanPham(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    base64ProductImgTemp = evt.target.result;
-                    document.getElementById('previewContainer').innerHTML = `<img src="${base64ProductImgTemp}" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border);">`;
-                };
-                reader.readAsDataURL(file);
+        // Gửi tin nhắn (Văn bản hoặc Ảnh/Video)
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+
+            if (!content && !selectedFile) return;
+            if (!activeReceiver) return;
+
+            let media_url = null;
+            let media_type = null;
+
+            // Xử lý upload media lên Supabase Storage bucket 'chat-media'
+            if (selectedFile) {
+                const fileExt = selectedFile.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const filePath = `${currentUser.id}/${fileName}`;
+
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('chat-media')
+                    .upload(filePath, selectedFile);
+
+                if (uploadError) {
+                    alert('Lỗi tải file lên: ' + uploadError.message);
+                    return;
+                }
+
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('chat-media')
+                    .getPublicUrl(filePath);
+
+                media_url = publicUrlData.publicUrl;
+                media_type = selectedFile.type.startsWith('image/') ? 'image' : 'video';
+
+                selectedFile = null;
+                document.getElementById('media-file').value = '';
+                document.getElementById('file-name').innerText = '';
             }
-        }
 
-        // Đăng ký tài khoản
-        async function xuLyDangKy() {
-            const name = document.getElementById('regName').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPass').value.trim();
-            const avatar = base64AvatarTemp || 'https://via.placeholder.com/150';
+            // Ghi dữ liệu vào bảng messages
+            const { error } = await supabaseClient.from('messages').insert([
+                {
+                    sender_id: currentUser.id,
+                    receiver_id: activeReceiver.id,
+                    content: content || null,
+                    media_url,
+                    media_type
+                }
+            ]);
 
-            if(!name || !email || !password) {
-                alert('Vui lòng điền đầy đủ thông tin đăng ký!');
-                return;
-            }
-
-            const { error } = await db.from('users').insert([{ name, email, password, avatar }]);
-            if(error) {
-                alert('Lỗi đăng ký (Email có thể đã tồn tại): ' + error.message);
+            if (error) {
+                alert('Lỗi gửi tin nhắn: ' + error.message);
             } else {
-                alert('Đăng ký thành công! Hãy tiến hành đăng nhập.');
-                doiTabAuth('login');
+                input.value = '';
             }
         }
 
-        // Đăng nhập
-        async function xuLyDangNhap() {
-            const userInput = document.getElementById('logUser').value.trim();
-            const passInput = document.getElementById('logPass').value.trim();
-
-            if(!userInput || !passInput) {
-                alert('Vui lòng nhập tài khoản và mật khẩu!');
-                return;
-            }
-
-            const { data, error } = await db.from('users')
-                .select('*')
-                .or(`name.eq.${userInput},email.eq.${userInput}`)
-                .eq('password', passInput);
-
-            if(error || !data || data.length === 0) {
-                alert('Sai tên đăng nhập hoặc mật khẩu!');
-                return;
-            }
-
-            activeUser = data[0];
-            localStorage.setItem('nexus_user_session', JSON.stringify(activeUser));
-            location.reload();
+        // Chống lỗi XSS cơ bản
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
-
-        function xuLyDangXuat() {
-            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
-                localStorage.removeItem('nexus_user_session');
-                location.reload();
-            }
-        }
-
-        // Gửi mã OTP khôi phục mật khẩu
-        async function guiMaOTP() {
-            const email = document.getElementById('forgotEmail').value.trim();
-            if(!email) { alert('Vui lòng nhập email của bạn!'); return; }
-            
-            const { error } = await db.auth.resetPasswordForEmail(email);
-            if(error) {
-                alert('Lỗi: ' + error.message);
-            } else {
-                alert('Đã gửi mã OTP đến email của bạn! Hãy bấm vào Đã có mã OTP để đổi mật khẩu.');
-                doiTabAuth('reset');
-            }
-        }
-
-        // Xác nhận đổi mật khẩu qua OTP
-        async function xacNhanDoiMK() {
-            const email = document.getElementById('forgotEmail').value.trim();
-            const token = document.getElementById('otpToken').value.trim();
-            const newPassword = document.getElementById('newPassword').value.trim();
-
-            if(!token || !newPassword) { alert('Vui lòng điền mã OTP và mật khẩu mới!'); return; }
-
-            const { error: otpErr } = await db.auth.verifyOtp({ email, token, type: 'recovery' });
-            if(otpErr) {
-                alert('Mã OTP không hợp lệ hoặc đã hết hạn!');
-                return;
-            }
-
-            const { error: updateErr } = await db.from('users').update({ password: newPassword }).eq('email', email);
-            if(updateErr) {
-                alert('Lỗi cập nhật mật khẩu: ' + updateErr.message);
-            } else {
-                alert('Đổi mật khẩu thành công! Hãy đăng nhập lại.');
-                doiTabAuth('login');
-            }
-        }
-
-        // Admin đăng bán sản phẩm mới
-        async function dangBanAccMoi() {
-            const title = document.getElementById('prodTitle').value.trim();
+    </script>
+</body>
+</html>
+rodTitle').value.trim();
             const price = document.getElementById('prodPrice').value.trim();
             const desc = document.getElementById('prodDesc').value.trim();
 
