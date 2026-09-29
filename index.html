@@ -3,101 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thập Cẩm Network - Orange Edition 🍊</title>
-    <!-- Nhúng thư viện FontAwesome để lấy icon -->
+    <title>Thập Cẩm Network</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #ff6600;
-            --primary-hover: #e55b00;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-main: #212529;
-            --text-muted: #6c757d;
-            --border-color: #dee2e6;
+            --fb-bg: #f0f2f5;
+            --fb-blue: #1877f2;
+            --fb-blue-hover: #166fe5;
+            --fb-card: #ffffff;
+            --fb-text: #050505;
+            --fb-secondary: #65676b;
+            --fb-border: #ced0d4;
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+        body { font-family: Helvetica, Arial, sans-serif; background: var(--fb-bg); color: var(--fb-text); margin: 0; padding: 0; }
         
-        /* Navbar */
-        header { background: var(--primary-color); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        header h2 { margin: 0; font-size: 20px; }
-        .user-badge { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .user-badge img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        /* Navbar phong cách Facebook */
+        header { background: var(--fb-card); height: 56px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        header h2 { color: var(--fb-blue); margin: 0; font-size: 24px; font-weight: bold; }
+        .user-profile-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; background: #e4e6eb; padding: 6px 12px; border-radius: 20px; }
+        .user-profile-badge img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
-        .container { max-width: 600px; margin: 20px auto; padding: 0 10px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .container { max-width: 600px; margin: 15px auto; padding: 0 10px; }
         
-        /* Form & Inputs */
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-        input:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(255,102,0,0.1); }
-        textarea { resize: none; height: 80px; }
+        /* Card chung */
+        .card { background: var(--fb-card); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+
+        /* Khung đăng bài */
+        .create-post-box textarea { width: 100%; border: none; outline: none; resize: none; font-size: 16px; padding: 8px 0; font-family: inherit; }
+        .create-post-actions { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f2f5; padding-top: 10px; margin-top: 5px; }
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; color: var(--fb-secondary); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
         
-        .btn { background: var(--primary-color); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
-        .btn:hover { background: var(--primary-hover); }
-        
-        /* Post Item */
+        .fb-btn { background: var(--fb-blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .fb-btn:hover { background: var(--fb-blue-hover); }
+
+        /* Bài viết trên Newsfeed */
         .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #ddd; }
-        .post-meta .post-author { font-weight: bold; font-size: 15px; }
-        .post-meta .post-time { font-size: 12px; color: var(--text-muted); }
+        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .post-author { font-weight: bold; font-size: 15px; color: var(--fb-text); }
+        .post-time { font-size: 12px; color: var(--fb-secondary); }
         
         .post-content { font-size: 15px; line-height: 1.5; margin-bottom: 10px; word-break: break-word; }
-        .post-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+        .post-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; }
 
-        /* Actions & Reactions */
-        .post-actions { display: flex; justify-content: space-around; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 5px 0; margin-bottom: 10px; }
-        .action-btn { background: none; border: none; color: var(--text-muted); font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 4px; }
-        .action-btn:hover { background: #f1f3f5; color: var(--primary-color); }
-        
-        /* Comments section */
-        .comments-section { margin-top: 10px; font-size: 14px; }
-        .comment-item { background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; }
-        .comment-author { font-weight: bold; font-size: 13px; color: var(--primary-color); }
-        .comment-input-box { display: flex; gap: 5px; margin-top: 8px; }
-        .comment-input-box input { margin-bottom: 0; }
-        .comment-input-box button { width: 80px; padding: 8px; font-size: 13px; }
+        .post-actions-bar { display: flex; border-top: 1px solid #e4e6eb; border-bottom: 1px solid #e4e6eb; padding: 4px 0; margin-bottom: 8px; }
+        .action-option { flex: 1; background: none; border: none; color: var(--fb-secondary); font-weight: 600; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 4px; font-size: 14px; }
+        .action-option:hover { background: #f2f2f2; }
 
-        /* Modal Đăng nhập / Đăng ký */
-        #authModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
-        .auth-box h3 { color: var(--primary-color); margin-top: 0; }
+        /* Modal đăng nhập lần đầu */
+        #authModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-box { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center; border: 1px solid #ddd; }
+        .auth-box h3 { color: var(--fb-blue); margin-top: 0; }
+        .avatar-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fb-blue); margin: 10px auto; display: block; background: #ddd; }
     </style>
 </head>
 <body>
 
-    <!-- Modal Đăng nhập / Khởi tạo tài khoản cá nhân -->
+    <!-- Modal Cài đặt tài khoản & Avatar từ máy -->
     <div id="authModal">
         <div class="auth-box">
-            <h3>🍊 Tham gia Thập Cẩm Network</h3>
-            <p style="font-size: 13px; color: var(--text-muted);">Nhập tên và link ảnh đại diện (Avatar) của bạn để bắt đầu:</p>
-            <input type="text" id="modalName" placeholder="Tên hiển thị của bạn...">
-            <input type="text" id="modalAvatar" placeholder="Link ảnh Avatar (Ví dụ: https://i.imgur.com/... hoặc để trống)">
-            <button class="btn" onclick="dangNhap()">Vào mạng xã hội ngay</button>
+            <h3>Thiết lập tài khoản</h3>
+            <p style="font-size: 13px; color: var(--fb-secondary);">Nhập tên và chọn ảnh đại diện từ thiết bị của bạn:</p>
+            <img id="previewImg" class="avatar-preview" src="https://via.placeholder.com/70" alt="Preview">
+            <div style="margin-bottom: 10px;">
+                <label class="fb-btn" style="display:inline-block; padding: 6px 12px; font-size: 13px;">
+                    Chọn ảnh đại diện <input type="file" id="avatarFile" accept="image/*" onchange="previewAvatar(event)" style="display:none;">
+                </label>
+            </div>
+            <input type="text" id="modalName" placeholder="Tên của bạn..." style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--fb-border); border-radius: 6px; box-sizing: border-box; outline: none;">
+            <button class="fb-btn" style="width: 100%; padding: 10px;" onclick="luuThongTinUser()">Vào mạng xã hội</button>
         </div>
     </div>
 
-    <!-- Header -->
+    <!-- Header Facebook -->
     <header>
-        <h2>Thập Cẩm 🍊</h2>
-        <div class="user-badge" id="currentUserBadge">
-            <img id="headerAvatar" src="" alt="Avatar">
+        <h2>thapcam</h2>
+        <div class="user-profile-badge" id="currentUserBadge">
+            <img id="headerAvatar" src="" alt="Ava">
             <span id="headerName">Khách</span>
         </div>
     </header>
 
     <div class="container">
-        <!-- Khung đăng bài -->
-        <div class="card">
-            <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế? Chia sẻ đi nào..."></textarea>
-            <input type="text" id="mediaInput" placeholder="Link ảnh hoặc video đính kèm (không bắt buộc)...">
-            <button class="btn" onclick="dangBai()"><i class="fa-solid fa-paper-plane"></i> Đăng bài viết</button>
+        <!-- Khung đăng bài chuẩn Facebook -->
+        <div class="card create-post-box">
+            <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế?"></textarea>
+            <div id="selectedMediaPreview" style="font-size: 12px; color: var(--fb-secondary); margin-bottom: 5px;"></div>
+            <div class="create-post-actions">
+                <div class="upload-btn-wrapper">
+                    <i class="fa-solid fa-image" style="color: #45bd62; font-size: 18px;"></i> Ảnh/Video
+                    <input type="file" id="mediaFile" accept="image/*,video/*" onchange="previewMedia(event)">
+                </div>
+                <button class="fb-btn" onclick="dangBai()">Đăng</button>
+            </div>
         </div>
 
         <!-- Bảng tin -->
-        <div class="card">
-            <h3 style="margin-top:0; font-size: 16px; border-bottom: 2px solid var(--primary-color); padding-bottom: 8px;">Bảng tin nổi bật</h3>
-            <div id="feed">Đang tải bài viết...</div>
-        </div>
+        <div id="feed">Đang tải bảng tin...</div>
     </div>
 
     <!-- Supabase SDK -->
@@ -109,45 +111,67 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentUser = JSON.parse(localStorage.getItem('thapcam_user')) || null;
+        let currentUser = JSON.parse(localStorage.getItem('thapcam_fb_user')) || null;
+        let tempAvatarBase64 = '';
+        let tempMediaBase64 = '';
 
-        // Xử lý hiển thị Modal đăng nhập
         window.onload = function() {
             if (currentUser) {
                 document.getElementById('authModal').style.display = 'none';
-                hienThiThongTinUser();
+                hienThiUserHeader();
             }
             layBaiViet();
         };
 
-        function dangNhap() {
+        // Chuyển ảnh đại diện từ máy thành chuỗi Base64 để lưu thẳng vào Database
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarBase64 = e.target.result;
+                    document.getElementById('previewImg').src = tempAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Chuyển ảnh/video bài viết từ máy thành Base64
+        function previewMedia(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempMediaBase64 = e.target.result;
+                    document.getElementById('selectedMediaPreview').innerText = "Đã đính kèm file: " + file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function luuThongTinUser() {
             const name = document.getElementById('modalName').value.trim();
-            let avatar = document.getElementById('modalAvatar').value.trim();
-            
             if (!name) {
                 alert('Vui lòng nhập tên của bạn!');
                 return;
             }
-            if (!avatar) {
-                avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name); // Tự động tạo avatar xinh nếu không nhập
-            }
+            const avatar = tempAvatarBase64 || 'https://via.placeholder.com/150';
 
             currentUser = { name, avatar };
-            localStorage.setItem('thapcam_user', JSON.stringify(currentUser));
-            
+            localStorage.setItem('thapcam_fb_user', JSON.stringify(currentUser));
             document.getElementById('authModal').style.display = 'none';
-            hienThiThongTinUser();
+            hienThiUserHeader();
             location.reload();
         }
 
-        function hienThiThongTinUser() {
-            if(currentUser) {
+        function hienThiUserHeader() {
+            if (currentUser) {
                 document.getElementById('headerName').innerText = currentUser.name;
                 document.getElementById('headerAvatar').src = currentUser.avatar;
             }
         }
 
-        // Đăng bài viết mới
+        // Đăng bài viết lên Supabase
         async function dangBai() {
             if (!currentUser) {
                 document.getElementById('authModal').style.display = 'flex';
@@ -155,20 +179,18 @@
             }
 
             const content = document.getElementById('contentInput').value.trim();
-            const media_url = document.getElementById('mediaInput').value.trim();
-
-            if (!content) {
-                alert('Vui lòng nhập nội dung bài viết!');
+            if (!content && !tempMediaBase64) {
+                alert('Vui lòng viết gì đó hoặc chọn ảnh đính kèm!');
                 return;
             }
 
             const { error } = await _supabase
                 .from('posts')
-                .insert([{ 
-                    author: currentUser.name, 
-                    avatar: currentUser.avatar, 
-                    content: content, 
-                    media_url: media_url,
+                .insert([{
+                    author: currentUser.name,
+                    avatar: currentUser.avatar,
+                    content: content,
+                    media_url: tempMediaBase64,
                     likes: 0
                 }]);
 
@@ -176,12 +198,13 @@
                 alert('Lỗi khi đăng: ' + error.message);
             } else {
                 document.getElementById('contentInput').value = '';
-                document.getElementById('mediaInput').value = '';
+                tempMediaBase64 = '';
+                document.getElementById('selectedMediaPreview').innerText = '';
                 layBaiViet();
             }
         }
 
-        // Lấy danh sách bài viết
+        // Lấy danh sách bài viết từ Supabase
         async function layBaiViet() {
             const { data, error } = await _supabase
                 .from('posts')
@@ -190,42 +213,44 @@
 
             const feedDiv = document.getElementById('feed');
             if (error) {
-                feedDiv.innerHTML = 'Lỗi tải dữ liệu: ' + error.message;
+                feedDiv.innerHTML = '<div class="card">Lỗi tải dữ liệu: ' + error.message + '</div>';
                 return;
             }
 
             if (!data || data.length === 0) {
-                feedDiv.innerHTML = '<p style="text-align:center; color:gray;">Chưa có bài viết nào. Hãy là người đầu tiên đăng status!</p>';
+                feedDiv.innerHTML = '<div class="card" style="text-align:center; color:gray;">Chưa có bài viết nào trên bảng tin.</div>';
                 return;
             }
 
             let html = '';
             data.forEach(post => {
-                let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('vn-VN') : '';
-                let avatarDefault = post.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + post.author;
+                let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('vi-VN') : '';
+                let avatar = post.avatar || 'https://via.placeholder.com/40';
                 
                 let mediaHtml = '';
                 if (post.media_url) {
-                    if (post.media_url.includes('.mp4') || post.media_url.includes('video')) {
-                        mediaHtml = `<video src="${escapeHtml(post.media_url)}" controls class="post-media"></video>`;
+                    if (post.media_url.startsWith('data:video')) {
+                        mediaHtml = `<video src="${post.media_url}" controls class="post-media"></video>`;
                     } else {
-                        mediaHtml = `<img src="${escapeHtml(post.media_url)}" class="post-media" alt="Media">`;
+                        mediaHtml = `<img src="${post.media_url}" class="post-media" alt="Post Image">`;
                     }
                 }
 
                 html += `
-                    <div class="post-item" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                    <div class="card">
                         <div class="post-header">
-                            <img src="${escapeHtml(avatarDefault)}" class="post-avatar" alt="Ava">
-                            <div class="post-meta">
+                            <img src="${avatar}" class="post-avatar" alt="Ava">
+                            <div>
                                 <div class="post-author">${escapeHtml(post.author)}</div>
                                 <div class="post-time">${timeStr}</div>
                             </div>
                         </div>
                         <div class="post-content">${escapeHtml(post.content)}</div>
                         ${mediaHtml}
-                        <div class="post-actions">
-                            <button class="action-btn" onclick="thaCamXuc('${post.id}', ${post.likes || 0})"><i class="fa-solid fa-heart" style="color: #ff6600;"></i> Thích (${post.likes || 0})</button>
+                        <div class="post-actions-bar">
+                            <button class="action-option" onclick="thichBai('${post.id}', ${post.likes || 0})">
+                                <i class="fa-regular fa-thumbs-up"></i> Thích (${post.likes || 0})
+                            </button>
                         </div>
                     </div>
                 `;
@@ -233,8 +258,7 @@
             feedDiv.innerHTML = html;
         }
 
-        // Thả tym / Thích bài viết
-        async function thaCamXuc(postId, currentLikes) {
+        async function thichBai(postId, currentLikes) {
             const { error } = await _supabase
                 .from('posts')
                 .update({ likes: currentLikes + 1 })
