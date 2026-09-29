@@ -3,355 +3,1017 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Chat Supabase</title>
-    <!-- Tailwind CSS -->
+
+    <title>ChatApp Realtime</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #messages-container {
+            scroll-behavior: smooth;
+        }
+
+        .message-img {
+            max-width: 260px;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .message-video {
+            max-width: 280px;
+            max-height: 320px;
+        }
+
+        @media (max-width: 700px) {
+            #chat-screen {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: 42%;
+            }
+
+            #chat-area {
+                height: 58%;
+            }
+
+            .message-img {
+                max-width: 210px;
+            }
+
+            .message-video {
+                max-width: 230px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 h-screen flex flex-col">
 
-    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ CHUNG MỘT NƠI -->
-    <div id="auth-screen" class="flex-1 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-2 text-center text-blue-600">ChatApp Realtime</h1>
-            <p class="text-center text-sm text-gray-500 mb-6">Nhập tên và mật khẩu. Chưa có tự đăng ký, có rồi tự đăng nhập!</p>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Tên tài khoản (Username)</label>
-                    <input type="text" id="username" placeholder="Ví dụ: namcute" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                    <input type="password" id="password" placeholder="Nhập mật khẩu..." class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" onkeypress="if(event.key === 'Enter') handleAuth()">
-                </div>
-                <button onclick="handleAuth()" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-semibold hover:bg-blue-700 transition">Vào Chat Ngay</button>
-            </div>
-        </div>
-    </div>
+<body class="bg-slate-100 h-screen">
 
-    <!-- GIAO DIỆN CHÍNH (SAU KHI ĐĂNG NHẬP) -->
-    <div id="chat-screen" class="hidden flex-1 flex overflow-hidden">
-        <!-- Sidebar danh sách người dùng -->
-        <div class="w-1/3 bg-white border-r flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <div>
-                    <h2 id="current-user-name" class="font-bold text-gray-800">Đang tải...</h2>
-                    <span class="text-xs text-green-500 font-medium">● Online</span>
-                </div>
-                <button onclick="logout()" class="text-sm text-red-500 hover:underline">Đăng xuất</button>
-            </div>
-            
-            <div class="p-3 border-b">
-                <input type="text" id="search-user" placeholder="Tìm kiếm người dùng..." class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
+<!-- ================= LOGIN ================= -->
 
-            <div id="users-list" class="flex-1 overflow-y-auto divide-y">
-                <!-- Danh sách user render ở đây -->
-            </div>
-        </div>
+<div id="auth-screen"
+     class="min-h-screen flex items-center justify-center p-4">
 
-        <!-- Khung chat chi tiết -->
-        <div class="flex-2 flex flex-col bg-slate-50 flex-1">
-            <div id="chat-header" class="p-4 bg-white border-b font-bold text-gray-700">
-                Chọn một người bạn để bắt đầu nhắn tin
-            </div>
+    <div class="bg-white p-7 rounded-2xl shadow-xl w-full max-w-md">
 
-            <!-- Khung chứa tin nhắn -->
-            <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">
-                <div class="text-center text-gray-400 my-auto">Chưa có cuộc trò chuyện nào được chọn.</div>
-            </div>
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-2">
+            ChatApp
+        </h1>
 
-            <!-- Khung nhập nội dung -->
-            <div id="chat-input-box" class="p-4 bg-white border-t hidden flex items-center space-x-2">
-                <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-gray-600 transition" title="Gửi ảnh/video">
-                    📁
-                    <input type="file" id="media-file" accept="image/*,video/*" class="hidden" onchange="previewMedia()">
+        <p class="text-center text-gray-500 text-sm mb-6">
+            Đăng nhập hoặc tạo tài khoản mới
+        </p>
+
+        <div class="space-y-4">
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">
+                    Tên tài khoản
                 </label>
-                <span id="file-name" class="text-xs text-blue-600 truncate max-w-[100px]"></span>
-                <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onkeypress="if(event.key === 'Enter') sendMessage()">
-                <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Gửi</button>
+
+                <input
+                    id="username"
+                    type="text"
+                    autocomplete="username"
+                    placeholder="Ví dụ: namcute"
+                    class="w-full mt-1 p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                >
             </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">
+                    Mật khẩu
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Nhập mật khẩu..."
+                    class="w-full mt-1 p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            <button
+                id="auth-button"
+                onclick="handleAuth()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-bold transition"
+            >
+                Vào Chat
+            </button>
+
+            <div id="auth-status"
+                 class="hidden text-sm text-center p-3 rounded-xl">
+            </div>
+
         </div>
     </div>
+</div>
 
-    <!-- Script xử lý toàn bộ -->
-    <script>
-        // THAY THẾ THÔNG TIN SUPABASE CỦA BẠN VÀO ĐÂY
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!-- ================= CHAT ================= -->
 
-        let currentUser = null;
-        let activeReceiver = null;
-        let selectedFile = null;
-        let currentSubscription = null;
+<div id="chat-screen"
+     class="hidden h-screen overflow-hidden">
 
-        // Kiểm tra xem trình duyệt đã lưu phiên đăng nhập trước đó chưa
-        async function checkUser() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                currentUser = session.user;
-                showChatScreen();
-            }
-        }
-        checkUser();
+    <!-- SIDEBAR -->
 
-        // Biến đổi tên thành email nội bộ giả lập
-        function getFakeEmail(username) {
-            return `${username.trim().toLowerCase().replace(/\s+/g, '')}@chatapp.local`;
-        }
+    <div id="sidebar"
+         class="w-1/3 bg-white border-r flex flex-col">
 
-        // Tự động xử lý Đăng nhập hoặc Đăng ký thông minh
-        async function handleAuth() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+        <div class="p-4 border-b bg-gray-50">
 
-            if (!username || !password) {
-                return alert('Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!');
-            }
+            <div class="flex justify-between items-center">
 
-            const fakeEmail = getFakeEmail(username);
-
-            // Thử đăng nhập trước
-            let { data, error } = await supabaseClient.auth.signInWithPassword({ 
-                email: fakeEmail, 
-                password: password 
-            });
-
-            // Nếu đăng nhập lỗi (do chưa có tài khoản), tiến hành tự động Đăng ký mới luôn
-            if (error) {
-                const signUpRes = await supabaseClient.auth.signUp({ 
-                    email: fakeEmail, 
-                    password: password 
-                });
-
-                if (signUpRes.error) {
-                    return alert('Lỗi đăng ký: ' + signUpRes.error.message);
-                }
-
-                if (signUpRes.data.user) {
-                    // Lưu profile vào bảng profiles
-                    const { error: profileError } = await supabaseClient.from('profiles').insert([{ 
-                        id: signUpRes.data.user.id, 
-                        username: username 
-                    }]);
-
-                    if (profileError) {
-                        return alert('Lỗi tạo hồ sơ: ' + profileError.message);
-                    }
-
-                    currentUser = signUpRes.data.user;
-                    showChatScreen();
-                    return;
-                }
-            } else if (data.user) {
-                // Đăng nhập thành công
-                currentUser = data.user;
-                showChatScreen();
-            }
-        }
-
-        // Đăng xuất
-        async function logout() {
-            if (currentSubscription) supabaseClient.removeChannel(currentSubscription);
-            await supabaseClient.auth.signOut();
-            currentUser = null;
-            activeReceiver = null;
-            document.getElementById('chat-screen').classList.add('hidden');
-            document.getElementById('auth-screen').classList.remove('hidden');
-        }
-
-        // Hiển thị giao diện chat chính
-        async function showChatScreen() {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('chat-screen').classList.remove('hidden');
-
-            const { data } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();
-            document.getElementById('current-user-name').innerText = data ? data.username : 'Người dùng';
-
-            loadUsers();
-        }
-
-        // Tải danh sách bạn bè / người dùng khác
-        async function loadUsers() {
-            const { data, error } = await supabaseClient.from('profiles').select('*').neq('id', currentUser.id);
-            if (error) return;
-
-            const listEl = document.getElementById('users-list');
-            listEl.innerHTML = '';
-
-            if (!data || data.length === 0) {
-                listEl.innerHTML = '<div class="p-4 text-center text-gray-400 text-sm">Chưa có người dùng nào khác. Hãy mở thêm tab ẩn danh để tạo thêm tài khoản thứ 2 test thử!</div>';
-                return;
-            }
-
-            data.forEach(user => {
-                const div = document.createElement('div');
-                div.className = 'p-3 hover:bg-gray-100 cursor-pointer flex items-center space-x-3 transition';
-                div.innerHTML = `
-                    <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
-                        ${user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                <div>
+                    <div id="current-user-name"
+                         class="font-bold text-gray-800">
+                        Đang tải...
                     </div>
-                    <div>
-                        <div class="font-semibold text-gray-800">${user.username || 'Không tên'}</div>
-                        <div class="text-xs text-gray-400">Nhấn để nhắn tin</div>
+
+                    <div class="text-xs text-green-500">
+                        ● Online
                     </div>
-                `;
-                div.onclick = () => selectReceiver(user);
-                listEl.appendChild(div);
-            });
-        }
-
-        // Chọn người nhận tin nhắn
-        function selectReceiver(user) {
-            activeReceiver = user;
-            document.getElementById('chat-header').innerText = `Đang chat với: ${user.username}`;
-            document.getElementById('chat-input-box').classList.remove('hidden');
-            loadMessages();
-            subscribeToMessages();
-        }
-
-        // Tải lịch sử tin nhắn
-        async function loadMessages() {
-            if (!activeReceiver) return;
-
-            const { data, error } = await supabaseClient
-                .from('messages')
-                .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeReceiver.id}),and(sender_id.eq.${activeReceiver.id},receiver_id.eq.${currentUser.id})`)
-                .order('created_at', { ascending: true });
-
-            if (error) return;
-
-            const container = document.getElementById('messages-container');
-            container.innerHTML = '';
-
-            data.forEach(msg => appendMessage(msg));
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // Thêm tin nhắn vào khung chat
-        function appendMessage(msg) {
-            const container = document.getElementById('messages-container');
-            const isMe = msg.sender_id === currentUser.id;
-
-            const div = document.createElement('div');
-            div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
-
-            let mediaHTML = '';
-            if (msg.media_url) {
-                if (msg.media_type === 'image') {
-                    mediaHTML = `<img src="${msg.media_url}" class="max-w-xs rounded-lg mt-1 mb-1 shadow">`;
-                } else if (msg.media_type === 'video') {
-                    mediaHTML = `<video src="${msg.media_url}" controls class="max-w-xs rounded-lg mt-1 mb-1 shadow"></video>`;
-                }
-            }
-
-            div.innerHTML = `
-                <div class="max-w-md px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}">
-                    ${msg.content ? `<span>${escapeHtml(msg.content)}</span>` : ''}
-                    ${mediaHTML}
                 </div>
-                <span class="text-[10px] text-gray-400 mt-1">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+
+                <button
+                    onclick="logout()"
+                    class="text-red-500 text-sm hover:underline">
+                    Đăng xuất
+                </button>
+
+            </div>
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="p-3 border-b">
+
+            <input
+                id="search-user"
+                type="text"
+                placeholder="🔎 Tìm người dùng..."
+                class="w-full p-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                oninput="filterUsers()"
+            >
+
+        </div>
+
+
+        <!-- USERS -->
+
+        <div id="users-list"
+             class="flex-1 overflow-y-auto">
+
+        </div>
+
+    </div>
+
+
+    <!-- CHAT AREA -->
+
+    <div id="chat-area"
+         class="flex-1 flex flex-col bg-slate-50">
+
+        <!-- HEADER -->
+
+        <div id="chat-header"
+             class="p-4 bg-white border-b font-bold text-gray-700">
+
+            Chọn một người để bắt đầu nhắn tin
+
+        </div>
+
+
+        <!-- MESSAGES -->
+
+        <div id="messages-container"
+             class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">
+
+            <div class="text-center text-gray-400 m-auto">
+                Chưa chọn cuộc trò chuyện.
+            </div>
+
+        </div>
+
+
+        <!-- INPUT -->
+
+        <div id="chat-input-box"
+             class="hidden p-3 bg-white border-t">
+
+            <div class="flex items-center gap-2">
+
+                <!-- FILE -->
+
+                <label
+                    class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-3 rounded-xl"
+                    title="Gửi ảnh/video">
+
+                    📎
+
+                    <input
+                        type="file"
+                        id="media-file"
+                        accept="image/*,video/*"
+                        class="hidden"
+                        onchange="previewMedia()"
+                    >
+
+                </label>
+
+                <div
+                    id="file-name"
+                    class="text-xs text-blue-600 truncate max-w-[120px]">
+                </div>
+
+
+                <!-- INPUT -->
+
+                <input
+                    id="message-input"
+                    type="text"
+                    placeholder="Nhập tin nhắn..."
+                    class="flex-1 p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                    onkeydown="if(event.key === 'Enter') sendMessage()"
+                >
+
+
+                <!-- SEND -->
+
+                <button
+                    onclick="sendMessage()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold">
+                    Gửi
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const SUPABASE_URL =
+    "https://qcgwmdsreduajcruktgm.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+
+
+const supabaseClient =
+    supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+let currentUser = null;
+let currentProfile = null;
+
+let activeReceiver = null;
+
+let selectedFile = null;
+
+let currentSubscription = null;
+
+let allUsers = [];
+
+
+/* ================= UTIL ================= */
+
+function getFakeEmail(username) {
+
+    return username
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "")
+        + "@chatapp.local";
+}
+
+
+function escapeHtml(text) {
+
+    if (!text) return "";
+
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function showAuthStatus(message, type = "error") {
+
+    const box = document.getElementById("auth-status");
+
+    box.classList.remove(
+        "hidden",
+        "bg-red-100",
+        "text-red-600",
+        "bg-green-100",
+        "text-green-600"
+    );
+
+    if (type === "success") {
+
+        box.classList.add(
+            "bg-green-100",
+            "text-green-600"
+        );
+
+    } else {
+
+        box.classList.add(
+            "bg-red-100",
+            "text-red-600"
+        );
+    }
+
+    box.innerText = message;
+}
+
+
+/* ================= CHECK SESSION ================= */
+
+async function checkUser() {
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient.auth.getSession();
+
+        if (error) {
+
+            console.error(error);
+
+            return;
         }
 
-        // Lắng nghe tin nhắn Realtime
-        function subscribeToMessages() {
-            if (currentSubscription) {
-                supabaseClient.removeChannel(currentSubscription);
-            }
+        if (data.session) {
 
-            currentSubscription = supabaseClient
-                .channel('public:messages')
-                .on('postgres_changes', { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'messages' 
-                }, payload => {
-                    const msg = payload.new;
-                    if (
-                        activeReceiver && 
-                        ((msg.sender_id === currentUser.id && msg.receiver_id === activeReceiver.id) ||
-                         (msg.sender_id === activeReceiver.id && msg.receiver_id === currentUser.id))
-                    ) {
-                        appendMessage(msg);
-                    }
+            currentUser = data.session.user;
+
+            await showChatScreen();
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+    }
+}
+
+
+checkUser();
+
+
+/* ================= AUTH ================= */
+
+async function handleAuth() {
+
+    const username =
+        document
+            .getElementById("username")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("password")
+            .value
+            .trim();
+
+
+    if (!username || !password) {
+
+        showAuthStatus(
+            "Vui lòng nhập tên tài khoản và mật khẩu."
+        );
+
+        return;
+    }
+
+
+    if (username.length < 3) {
+
+        showAuthStatus(
+            "Tên tài khoản phải có ít nhất 3 ký tự."
+        );
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        showAuthStatus(
+            "Mật khẩu phải có ít nhất 6 ký tự."
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById("auth-button");
+
+    button.disabled = true;
+
+    button.innerText = "Đang xử lý...";
+
+
+    const email =
+        getFakeEmail(username);
+
+
+    try {
+
+        /* ---------- LOGIN ---------- */
+
+        const login =
+            await supabaseClient.auth.signInWithPassword({
+
+                email: email,
+
+                password: password
+
+            });
+
+
+        if (!login.error && login.data.user) {
+
+            currentUser = login.data.user;
+
+            showAuthStatus(
+                "Đăng nhập thành công!",
+                "success"
+            );
+
+            await showChatScreen();
+
+            return;
+        }
+
+
+        /* ---------- REGISTER ---------- */
+
+        const signup =
+            await supabaseClient.auth.signUp({
+
+                email: email,
+
+                password: password
+
+            });
+
+
+        if (signup.error) {
+
+            throw signup.error;
+        }
+
+
+        if (!signup.data.user) {
+
+            throw new Error(
+                "Không tạo được tài khoản."
+            );
+        }
+
+
+        currentUser = signup.data.user;
+
+
+        /* ---------- PROFILE ---------- */
+
+        const profile =
+            await supabaseClient
+                .from("profiles")
+                .insert({
+
+                    id: currentUser.id,
+
+                    username: username
+
                 })
-                .subscribe();
+                .select()
+                .single();
+
+
+        if (profile.error) {
+
+            /*
+             * Nếu profile đã tồn tại thì bỏ qua.
+             */
+            console.error(
+                "Profile:",
+                profile.error
+            );
         }
 
-        // Xem trước tên file
-        function previewMedia() {
-            const fileInput = document.getElementById('media-file');
-            selectedFile = fileInput.files[0];
-            if (selectedFile) {
-                document.getElementById('file-name').innerText = selectedFile.name;
-            }
+
+        /*
+         * Supabase có thể yêu cầu xác nhận email.
+         */
+
+        if (!signup.data.session) {
+
+            showAuthStatus(
+                "Tài khoản đã tạo. Nếu Supabase đang bật xác nhận email, hãy tắt Email Confirmation trong Auth Settings để đăng nhập ngay.",
+                "success"
+            );
+
+            return;
         }
 
-        // Gửi tin nhắn hoặc Ảnh/Video
-        async function sendMessage() {
-            const input = document.getElementById('message-input');
-            const content = input.value.trim();
 
-            if (!content && !selectedFile) return;
-            if (!activeReceiver) return;
+        await showChatScreen();
 
-            let media_url = null;
-            let media_type = null;
 
-            if (selectedFile) {
-                const fileExt = selectedFile.name.split('.').pop();
-                const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-                const filePath = `${currentUser.id}/${fileName}`;
+    } catch (err) {
 
-                const { error: uploadError } = await supabaseClient.storage
-                    .from('chat-media')
-                    .upload(filePath, selectedFile);
+        console.error(err);
 
-                if (uploadError) {
-                    alert('Lỗi tải file lên: ' + uploadError.message);
-                    return;
-                }
+        showAuthStatus(
+            "Lỗi: " + (
+                err.message ||
+                "Không xác định"
+            )
+        );
 
-                const { data: publicUrlData } = supabaseClient.storage
-                    .from('chat-media')
-                    .getPublicUrl(filePath);
+    } finally {
 
-                media_url = publicUrlData.publicUrl;
-                media_type = selectedFile.type.startsWith('image/') ? 'image' : 'video';
+        button.disabled = false;
 
-                selectedFile = null;
-                document.getElementById('media-file').value = '';
-                document.getElementById('file-name').innerText = '';
-            }
+        button.innerText = "Vào Chat";
+    }
+}
 
-            const { error } = await supabaseClient.from('messages').insert([
-                {
-                    sender_id: currentUser.id,
-                    receiver_id: activeReceiver.id,
-                    content: content || null,
-                    media_url,
-                    media_type
-                }
-            ]);
 
-            if (error) {
-                alert('Lỗi gửi tin nhắn: ' + error.message);
-            } else {
-                input.value = '';
-            }
+/* ================= LOGOUT ================= */
+
+async function logout() {
+
+    try {
+
+        if (currentSubscription) {
+
+            await supabaseClient
+                .removeChannel(
+                    currentSubscription
+                );
+
+            currentSubscription = null;
         }
 
-        function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        await supabaseClient.auth.signOut();
+
+
+        currentUser = null;
+
+        currentProfile = null;
+
+        activeReceiver = null;
+
+
+        document
+            .getElementById("chat-screen")
+            .classList.add("hidden");
+
+
+        document
+            .getElementById("auth-screen")
+            .classList.remove("hidden");
+
+
+    } catch (err) {
+
+        alert(
+            "Lỗi đăng xuất: " +
+            err.message
+        );
+    }
+}
+
+
+/* ================= CHAT SCREEN ================= */
+
+async function showChatScreen() {
+
+    document
+        .getElementById("auth-screen")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("chat-screen")
+        .classList.remove("hidden");
+
+
+    await loadCurrentProfile();
+
+    await loadUsers();
+}
+
+
+/* ================= CURRENT PROFILE ================= */
+
+async function loadCurrentProfile() {
+
+    const result =
+        await supabaseClient
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .maybeSingle();
+
+
+    if (result.error) {
+
+        console.error(result.error);
+
+        document
+            .getElementById("current-user-name")
+            .innerText = "Người dùng";
+
+        return;
+    }
+
+
+    if (result.data) {
+
+        currentProfile = result.data;
+
+        document
+            .getElementById("current-user-name")
+            .innerText =
+            result.data.username;
+
+    } else {
+
+        document
+            .getElementById("current-user-name")
+            .innerText =
+            "Người dùng";
+    }
+}
+
+
+/* ================= USERS ================= */
+
+async function loadUsers() {
+
+    const list =
+        document.getElementById("users-list");
+
+
+    list.innerHTML = `
+        <div class="p-4 text-center text-gray-400">
+            Đang tải...
+        </div>
+    `;
+
+
+    const result =
+        await supabaseClient
+            .from("profiles")
+            .select("id, username")
+            .neq("id", currentUser.id)
+            .order("username");
+
+
+    if (result.error) {
+
+        console.error(result.error);
+
+        list.innerHTML = `
+            <div class="p-4 text-center text-red-500 text-sm">
+                Không tải được người dùng.<br><br>
+                ${escapeHtml(result.error.message)}
+            </div>
+        `;
+
+        return;
+    }
+
+
+    allUsers = result.data || [];
+
+
+    renderUsers(allUsers);
+}
+
+
+function renderUsers(users) {
+
+    const list =
+        document.getElementById("users-list");
+
+
+    list.innerHTML = "";
+
+
+    if (!users.length) {
+
+        list.innerHTML = `
+            <div class="p-5 text-center text-gray-400 text-sm">
+                Chưa có người dùng khác.
+                <br><br>
+                Mở tab ẩn danh để tạo tài khoản thứ 2.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    users.forEach(user => {
+
+        const div =
+            document.createElement("div");
+
+
+        div.className =
+            "p-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3 transition";
+
+
+        const first =
+            user.username
+                ? user.username
+                    .charAt(0)
+                    .toUpperCase()
+                : "U";
+
+
+        div.innerHTML = `
+
+            <div class="
+                w-11
+                h-11
+                bg-blue-500
+                text-white
+                rounded-full
+                flex
+                items-center
+                justify-center
+                font-bold
+                flex-shrink-0
+            ">
+                ${escapeHtml(first)}
+            </div>
+
+            <div class="min-w-0">
+
+                <div class="font-semibold text-gray-800 truncate">
+                    ${escapeHtml(
+                        user.username ||
+                        "Không tên"
+                    )}
+                </div>
+
+                <div class="text-xs text-gray-400">
+                    Nhấn để nhắn tin
+                </div>
+
+            </div>
+
+        `;
+
+
+        div.onclick = () =>
+            selectReceiver(user);
+
+
+        list.appendChild(div);
+
+    });
+}
+
+
+/* ================= SEARCH ================= */
+
+function filterUsers() {
+
+    const keyword =
+        document
+            .getElementById("search-user")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const filtered =
+        allUsers.filter(user =>
+            (user.username || "")
+                .toLowerCase()
+                .includes(keyword)
+        );
+
+
+    renderUsers(filtered);
+}
+
+
+/* ================= SELECT USER ================= */
+
+async function selectReceiver(user) {
+
+    activeReceiver = user;
+
+
+    document
+        .getElementById("chat-header")
+        .innerText =
+        "Đang chat với: " +
+        user.username;
+
+
+    document
+        .getElementById("chat-input-box")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("messages-container")
+        .innerHTML = `
+            <div class="text-center text-gray-400 m-auto">
+                Đang tải tin nhắn...
+            </div>
+        `;
+
+
+    await loadMessages();
+
+    subscribeToMessages();
+}
+
+
+/* ================= LOAD MESSAGES ================= */
+
+async function loadMessages() {
+
+    if (!activeReceiver) return;
+
+
+    const result =
+        await supabaseClient
+            .from("messages")
+            .select("*")
+            .or(
+                `and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeReceiver.id}),and(sender_id.eq.${activeReceiver.id},receiver_id.eq.${currentUser.id})`
+            )
+            .order("created_at", {
+                ascending: true
+            });
+
+
+    if (result.error) {
+
+        console.error(result.error);
+
+        document
+            .getElementById("messages-container")
+            .innerHTML = `
+                <div class="text-center text-red-500 m-auto">
+                    ${escapeHtml(
+                        result.error.message
+                    )}
+                </div>
+            `;
+
+        return;
+    }
+
+
+    const container =
+        document.getElementById(
+            "messages-container"
+        );
+
+
+    container.innerHTML = "";
+
+
+    if (!result.data.length) {
+
+        container.innerHTML = `
+            <div class="text-center text-gray-400 m-auto">
+                Chưa có tin nhắn.<br>
+                Hãy gửi tin đầu tiên!
+            </div>
+        `;
+
+        return;
+    }
+
+
+    result.data.forEach(msg =>
+        appendMessage(msg)
+    );
+
+
+    scrollMessages();
+}
+
+
+/* ================= APPEND MESSAGE ================= */
+
+function appendMessage(msg) {
+
+    if (!currentUser) return;
+
+
+    const container =
+        document.getElementById(
+            "messages-container"
+        );
+
+
+    const empty =
+        container.querySelector(
+            ".text-gray-400.m-auto"
+        );
+
+
+    if (empty) {
+
+        container.innerHTML = "";
+    }
+
+
+    const isMe =
+        msg.sender_id === currentUser.id;
+
+
+    const wrapper =
+        document.createElement("div");
+
+
+    wrapper.className =
+        "flex flex-col " +
+        (
+            isMe
+                ? "items-end"
+                : "items-start"
+        );
+
+
+    let mediaHTML = "";
+
+
+    if (msg.media_url) {
+
+        if (msg.media_type === "image") {
+
+            mediaHTML = `
+                <img
+                    src="${escapeHtml(msg.media_url)}"
+                    class="message-img rounded-xl mt-2 shadow"
+                    loading="lazy"
+                >
+            `;
+
+        } else if (msg.media_type === "video") {
+
+            mediaHTML = `
+                <video
+                    src="${escapeHtml(msg.media_url)}"
+                    controls
+                    class="message-video rounded-xl mt-2 shadow"
+                ></video>
+            `;
         }
-    </script>
-</body>
-</html>
+    }
+
+
+    const content =
+        msg.content
+            ? `<div>${escapeHtml(msg.content)}</div>`
+            : "";
+
+
+    const time =
+        msg.crea
