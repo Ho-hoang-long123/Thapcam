@@ -3,113 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thập Cẩm Network</title>
+    <title>Thập Cẩm Network - Orange Edition 🍊</title>
+    <!-- Nhúng thư viện FontAwesome để lấy icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: none; }
-        input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #1877f2; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #166fe5; }
-        .post-item { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
-        .post-author { font-weight: bold; color: #050505; }
-        .post-time { font-size: 11px; color: #65676b; margin-top: 3px; }
+        :root {
+            --primary-color: #ff6600;
+            --primary-hover: #e55b00;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+        
+        /* Navbar */
+        header { background: var(--primary-color); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        header h2 { margin: 0; font-size: 20px; }
+        .user-badge { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .user-badge img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+
+        .container { max-width: 600px; margin: 20px auto; padding: 0 10px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        
+        /* Form & Inputs */
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(255,102,0,0.1); }
+        textarea { resize: none; height: 80px; }
+        
+        .btn { background: var(--primary-color); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
+        
+        /* Post Item */
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #ddd; }
+        .post-meta .post-author { font-weight: bold; font-size: 15px; }
+        .post-meta .post-time { font-size: 12px; color: var(--text-muted); }
+        
+        .post-content { font-size: 15px; line-height: 1.5; margin-bottom: 10px; word-break: break-word; }
+        .post-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+
+        /* Actions & Reactions */
+        .post-actions { display: flex; justify-content: space-around; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 5px 0; margin-bottom: 10px; }
+        .action-btn { background: none; border: none; color: var(--text-muted); font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 4px; }
+        .action-btn:hover { background: #f1f3f5; color: var(--primary-color); }
+        
+        /* Comments section */
+        .comments-section { margin-top: 10px; font-size: 14px; }
+        .comment-item { background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; }
+        .comment-author { font-weight: bold; font-size: 13px; color: var(--primary-color); }
+        .comment-input-box { display: flex; gap: 5px; margin-top: 8px; }
+        .comment-input-box input { margin-bottom: 0; }
+        .comment-input-box button { width: 80px; padding: 8px; font-size: 13px; }
+
+        /* Modal Đăng nhập / Đăng ký */
+        #authModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
+        .auth-box h3 { color: var(--primary-color); margin-top: 0; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Thập Cẩm Network 🚀</h2>
-
-    <!-- Khung đăng bài -->
-    <div class="card">
-        <h3>Đăng trạng thái mới</h3>
-        <input type="text" id="authorInput" placeholder="Tên của bạn...">
-        <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế?"></textarea>
-        <button onclick="dangBai()">Đăng bài</button>
+    <!-- Modal Đăng nhập / Khởi tạo tài khoản cá nhân -->
+    <div id="authModal">
+        <div class="auth-box">
+            <h3>🍊 Tham gia Thập Cẩm Network</h3>
+            <p style="font-size: 13px; color: var(--text-muted);">Nhập tên và link ảnh đại diện (Avatar) của bạn để bắt đầu:</p>
+            <input type="text" id="modalName" placeholder="Tên hiển thị của bạn...">
+            <input type="text" id="modalAvatar" placeholder="Link ảnh Avatar (Ví dụ: https://i.imgur.com/... hoặc để trống)">
+            <button class="btn" onclick="dangNhap()">Vào mạng xã hội ngay</button>
+        </div>
     </div>
 
-    <!-- Bảng hiển thị bài viết -->
-    <div class="card">
-        <h3>Bảng tin</h3>
-        <div id="feed">Đang tải bài viết...</div>
+    <!-- Header -->
+    <header>
+        <h2>Thập Cẩm 🍊</h2>
+        <div class="user-badge" id="currentUserBadge">
+            <img id="headerAvatar" src="" alt="Avatar">
+            <span id="headerName">Khách</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Khung đăng bài -->
+        <div class="card">
+            <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế? Chia sẻ đi nào..."></textarea>
+            <input type="text" id="mediaInput" placeholder="Link ảnh hoặc video đính kèm (không bắt buộc)...">
+            <button class="btn" onclick="dangBai()"><i class="fa-solid fa-paper-plane"></i> Đăng bài viết</button>
+        </div>
+
+        <!-- Bảng tin -->
+        <div class="card">
+            <h3 style="margin-top:0; font-size: 16px; border-bottom: 2px solid var(--primary-color); padding-bottom: 8px;">Bảng tin nổi bật</h3>
+            <div id="feed">Đang tải bài viết...</div>
+        </div>
     </div>
-</div>
 
-<!-- Nhúng thư viện Supabase từ CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    // Cấu hình Supabase với key mới của bạn
-    const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
 
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. Hàm đăng bài lên Supabase
-    async function dangBai() {
-        const author = document.getElementById('authorInput').value.trim();
-        const content = document.getElementById('contentInput').value.trim();
+        let currentUser = JSON.parse(localStorage.getItem('thapcam_user')) || null;
 
-        if (!author || !content) {
-            alert('Vui lòng nhập tên và nội dung!');
-            return;
+        // Xử lý hiển thị Modal đăng nhập
+        window.onload = function() {
+            if (currentUser) {
+                document.getElementById('authModal').style.display = 'none';
+                hienThiThongTinUser();
+            }
+            layBaiViet();
+        };
+
+        function dangNhap() {
+            const name = document.getElementById('modalName').value.trim();
+            let avatar = document.getElementById('modalAvatar').value.trim();
+            
+            if (!name) {
+                alert('Vui lòng nhập tên của bạn!');
+                return;
+            }
+            if (!avatar) {
+                avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(name); // Tự động tạo avatar xinh nếu không nhập
+            }
+
+            currentUser = { name, avatar };
+            localStorage.setItem('thapcam_user', JSON.stringify(currentUser));
+            
+            document.getElementById('authModal').style.display = 'none';
+            hienThiThongTinUser();
+            location.reload();
         }
 
-        const { error } = await _supabase
-            .from('posts')
-            .insert([{ author: author, content: content }]);
-
-        if (error) {
-            alert('Lỗi khi đăng: ' + error.message);
-        } else {
-            document.getElementById('contentInput').value = ''; // Xóa ô nội dung
-            layBaiViet(); // Tải lại danh sách
-        }
-    }
-
-    // 2. Hàm lấy tất cả bài viết từ Supabase hiển thị lên web
-    async function layBaiViet() {
-        const { data, error } = await _supabase
-            .from('posts')
-            .select('*')
-            .order('created_at', { ascending: false }); // Lấy bài mới nhất lên trên
-
-        const feedDiv = document.getElementById('feed');
-        if (error) {
-            feedDiv.innerHTML = 'Lỗi tải dữ liệu: ' + error.message;
-            return;
+        function hienThiThongTinUser() {
+            if(currentUser) {
+                document.getElementById('headerName').innerText = currentUser.name;
+                document.getElementById('headerAvatar').src = currentUser.avatar;
+            }
         }
 
-        if (!data || data.length === 0) {
-            feedDiv.innerHTML = 'Chưa có bài viết nào. Hãy là người đầu tiên đăng bài!';
-            return;
+        // Đăng bài viết mới
+        async function dangBai() {
+            if (!currentUser) {
+                document.getElementById('authModal').style.display = 'flex';
+                return;
+            }
+
+            const content = document.getElementById('contentInput').value.trim();
+            const media_url = document.getElementById('mediaInput').value.trim();
+
+            if (!content) {
+                alert('Vui lòng nhập nội dung bài viết!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('posts')
+                .insert([{ 
+                    author: currentUser.name, 
+                    avatar: currentUser.avatar, 
+                    content: content, 
+                    media_url: media_url,
+                    likes: 0
+                }]);
+
+            if (error) {
+                alert('Lỗi khi đăng: ' + error.message);
+            } else {
+                document.getElementById('contentInput').value = '';
+                document.getElementById('mediaInput').value = '';
+                layBaiViet();
+            }
         }
 
-        let html = '';
-        data.forEach(post => {
-            let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('vi-VN') : '';
-            html += `
-                <div class="post-item">
-                    <div class="post-author">${escapeHtml(post.author)}</div>
-                    <div style="margin-top: 5px;">${escapeHtml(post.content)}</div>
-                    <div class="post-time">${timeStr}</div>
-                </div>
-            `;
-        });
-        feedDiv.innerHTML = html;
-    }
+        // Lấy danh sách bài viết
+        async function layBaiViet() {
+            const { data, error } = await _supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-    // Hàm chống lỗi bảo mật hiển thị ký tự HTML
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
+            const feedDiv = document.getElementById('feed');
+            if (error) {
+                feedDiv.innerHTML = 'Lỗi tải dữ liệu: ' + error.message;
+                return;
+            }
 
-    // Tự động tải bài viết khi vừa mở web
-    layBaiViet();
-</script>
+            if (!data || data.length === 0) {
+                feedDiv.innerHTML = '<p style="text-align:center; color:gray;">Chưa có bài viết nào. Hãy là người đầu tiên đăng status!</p>';
+                return;
+            }
 
+            let html = '';
+            data.forEach(post => {
+                let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('vn-VN') : '';
+                let avatarDefault = post.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + post.author;
+                
+                let mediaHtml = '';
+                if (post.media_url) {
+                    if (post.media_url.includes('.mp4') || post.media_url.includes('video')) {
+                        mediaHtml = `<video src="${escapeHtml(post.media_url)}" controls class="post-media"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${escapeHtml(post.media_url)}" class="post-media" alt="Media">`;
+                    }
+                }
+
+                html += `
+                    <div class="post-item" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                        <div class="post-header">
+                            <img src="${escapeHtml(avatarDefault)}" class="post-avatar" alt="Ava">
+                            <div class="post-meta">
+                                <div class="post-author">${escapeHtml(post.author)}</div>
+                                <div class="post-time">${timeStr}</div>
+                            </div>
+                        </div>
+                        <div class="post-content">${escapeHtml(post.content)}</div>
+                        ${mediaHtml}
+                        <div class="post-actions">
+                            <button class="action-btn" onclick="thaCamXuc('${post.id}', ${post.likes || 0})"><i class="fa-solid fa-heart" style="color: #ff6600;"></i> Thích (${post.likes || 0})</button>
+                        </div>
+                    </div>
+                `;
+            });
+            feedDiv.innerHTML = html;
+        }
+
+        // Thả tym / Thích bài viết
+        async function thaCamXuc(postId, currentLikes) {
+            const { error } = await _supabase
+                .from('posts')
+                .update({ likes: currentLikes + 1 })
+                .eq('id', postId);
+
+            if (!error) {
+                layBaiViet();
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
 </body>
 </html>
