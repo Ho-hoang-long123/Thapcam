@@ -20,8 +20,11 @@
         /* Navbar */
         header { background: var(--fb-card); height: 56px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         header h2 { color: var(--fb-blue); margin: 0; font-size: 24px; font-weight: bold; }
+        .user-nav-right { display: flex; align-items: center; gap: 10px; }
         .user-profile-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; background: #e4e6eb; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
         .user-profile-badge img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+        .change-avatar-btn { background: #e4e6eb; border: none; padding: 6px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--fb-secondary); }
+        .change-avatar-btn:hover { background: #d8dadf; }
 
         .container { max-width: 600px; margin: 15px auto; padding: 0 10px; }
         .card { background: var(--fb-card); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
@@ -76,7 +79,7 @@
             <div id="registerForm" style="display: none;">
                 <img id="previewImg" class="avatar-preview" src="https://via.placeholder.com/70" alt="Avatar">
                 <div style="margin-bottom: 8px;">
-                    <label class="fb-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px;">
+                    <label class="fb-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px; cursor:pointer;">
                         Chọn ảnh đại diện <input type="file" id="regAvatarFile" accept="image/*" onchange="previewAvatar(event)" style="display:none;">
                     </label>
                 </div>
@@ -87,12 +90,21 @@
                 <span class="switch-auth" onclick="chuyenForm('login')">Đã có tài khoản? Đăng nhập</span>
             </div>
 
-            <!-- 3. FORM QUÊN MẬT KHẨU / ĐỔI MẬT KHẨU TRỰC TIẾP -->
+            <!-- 3. FORM QUÊN MẬT KHẨU & NHẬP OTP -->
             <div id="forgotForm" style="display: none;">
-                <p style="font-size: 13px; color: var(--fb-secondary);">Nhập Email tài khoản cần đổi mật khẩu mới.</p>
-                <input type="email" id="forgotEmail" class="auth-input" placeholder="Nhập địa chỉ Email của bạn">
-                <input type="password" id="newPass" class="auth-input" placeholder="Nhập mật khẩu mới">
-                <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="xuLyDoiMatKhauMoi()">Cập nhật mật khẩu mới</button>
+                <!-- Bước 1: Nhập email lấy mã -->
+                <div id="forgotStep1">
+                    <p style="font-size: 13px; color: var(--fb-secondary);">Nhập Email tài khoản để nhận mã OTP khôi phục.</p>
+                    <input type="email" id="forgotEmail" class="auth-input" placeholder="Nhập địa chỉ Email của bạn">
+                    <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="guiMaOTP()">Gửi mã OTP</button>
+                </div>
+                <!-- Bước 2: Nhập OTP và Mật khẩu mới -->
+                <div id="forgotStep2" style="display: none;">
+                    <p style="font-size: 13px; color: #42b72a;" id="otpNotice">Mã OTP đã được gửi đến email của bạn!</p>
+                    <input type="text" id="inputOtp" class="auth-input" placeholder="Nhập mã OTP gồm 6 chữ số">
+                    <input type="password" id="newPass" class="auth-input" placeholder="Nhập mật khẩu mới">
+                    <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="xacNhanDoiMatKhau()">Xác nhận đổi mật khẩu</button>
+                </div>
                 <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
             </div>
         </div>
@@ -101,9 +113,16 @@
     <!-- Header Facebook -->
     <header>
         <h2>thapcam</h2>
-        <div class="user-profile-badge" onclick="dangXuat()" title="Bấm để đăng xuất">
-            <img id="headerAvatar" src="" alt="Ava">
-            <span id="headerName">Khách</span> <i class="fa-solid fa-right-from-bracket" style="font-size: 12px; color: var(--fb-secondary);"></i>
+        <div class="user-nav-right">
+            <!-- Nút thay đổi Avatar ẩn/hiện tùy trạng thái đăng nhập -->
+            <div id="changeAvatarWrapper" style="display: none; position: relative; overflow: hidden;" class="change-avatar-btn">
+                <i class="fa-solid fa-camera"></i> Đổi Avatar
+                <input type="file" accept="image/*" onchange="doiAvatarTrucTiep(event)" style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
+            </div>
+            <div class="user-profile-badge" onclick="dangXuat()" title="Bấm để đăng xuất">
+                <img id="headerAvatar" src="" alt="Ava">
+                <span id="headerName">Khách</span> <i class="fa-solid fa-right-from-bracket" style="font-size: 12px; color: var(--fb-secondary);"></i>
+            </div>
         </div>
     </header>
 
@@ -137,6 +156,8 @@
         let currentUser = JSON.parse(localStorage.getItem('thapcam_current_user')) || null;
         let tempAvatarBase64 = '';
         let tempMediaBase64 = '';
+        let generatedOtp = '';
+        let resetEmailTarget = '';
 
         window.onload = function() {
             if (currentUser) {
@@ -158,6 +179,223 @@
                 document.getElementById('authTitle').innerText = 'Tạo tài khoản mới';
             } else if (type === 'forgot') {
                 document.getElementById('forgotForm').style.display = 'block';
+                document.getElementById('forgotStep1').style.display = 'block';
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('authTitle').innerText = 'Khôi phục mật khẩu';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Đăng nhập Thập Cẩm';
+            }
+        }
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarBase64 = e.target.result;
+                    document.getElementById('previewImg').src = tempAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewMedia(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempMediaBase64 = e.target.result;
+                    document.getElementById('selectedMediaPreview').innerText = "Đã chọn: " + file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- ĐĂNG KÝ TÀI KHOẢN ---
+        async function xuLyDangKy() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPass').value.trim();
+            const avatar = tempAvatarBase64 || 'https://via.placeholder.com/150';
+
+            if (!name || !email || !password) {
+                alert('Vui lòng điền đầy đủ Tên, Email và Mật khẩu!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('users')
+                .insert([{ name, email, password, avatar }]);
+
+            if (error) {
+                alert('Lỗi đăng ký (Email có thể đã tồn tại): ' + error.message);
+            } else {
+                alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                chuyenForm('login');
+            }
+        }
+
+        // --- ĐĂNG NHẬP ---
+        async function xuLyDangNhap() {
+            const userInput = document.getElementById('loginUser').value.trim();
+            const passwordInput = document.getElementById('loginPass').value.trim();
+
+            if (!userInput || !passwordInput) {
+                alert('Vui lòng nhập tài khoản và mật khẩu!');
+                return;
+            }
+
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .or(`name.eq.${userInput},email.eq.${userInput}`)
+                .eq('password', passwordInput);
+
+            if (error || !data || data.length === 0) {
+                alert('Sai tên đăng nhập hoặc mật khẩu!');
+                return;
+            }
+
+            currentUser = data[0];
+            localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+            document.getElementById('authModal').style.display = 'none';
+            hienThiUserHeader();
+            location.reload();
+        }
+
+        // --- GỬI MÃ OTP QUÊN MẬT KHẨU ---
+        async function guiMaOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!email) {
+                alert('Vui lòng nhập địa chỉ email của bạn!');
+                return;
+            }
+
+            // Kiểm tra email có tồn tại không
+            const { data: checkUser, error: checkError } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('email', email);
+
+            if (checkError || !checkUser || checkUser.length === 0) {
+                alert('Không tìm thấy tài khoản với email này!');
+                return;
+            }
+
+            // Tạo mã OTP ngẫu nhiên 6 chữ số
+            generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            resetEmailTarget = email;
+
+            // Hiển thị thông báo mã OTP (Do chạy web tĩnh thuần client, ta hiển thị popup mã OTP cho bạn dễ test)
+            alert(`[MÔ PHỎNG GỬI EMAIL]\nMã OTP xác thực của bạn là: ${generatedOtp}`);
+
+            // Chuyển sang bước nhập OTP
+            document.getElementById('forgotStep1').style.display = 'none';
+            document.getElementById('forgotStep2').style.display = 'block';
+            document.getElementById('otpNotice').innerText = `Đã gửi mã OTP đến email: ${email}`;
+        }
+
+        // --- XÁC NHẬN OTP VÀ ĐỔI MẬT KHẨU ---
+        async function xacNhanDoiMatKhau() {
+            const inputOtpValue = document.getElementById('inputOtp').value.trim();
+            const newPassword = document.getElementById('newPass').value.trim();
+
+            if (!inputOtpValue || !newPassword) {
+                alert('Vui lòng nhập đầy đủ mã OTP và mật khẩu mới!');
+                return;
+            }
+
+            if (inputOtpValue !== generatedOtp) {
+                alert('Mã OTP không chính xác!');
+                return;
+            }
+
+            // Cập nhật mật khẩu vào CSDL
+            const { error: updateError } = await _supabase
+                .from('users')
+                .update({ password: newPassword })
+                .eq('email', resetEmailTarget);
+
+            if (updateError) {
+                alert('Lỗi cập nhật mật khẩu: ' + updateError.message);
+            } else {
+                alert('Đổi mật khẩu thành công! Hãy đăng nhập lại.');
+                chuyenForm('login');
+            }
+        }
+
+        // --- ĐỔI AVATAR TRỰC TIẾP ---
+        async function doiAvatarTrucTiep(event) {
+            const file = event.target.files[0];
+            if (!file || !currentUser) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const newAvatarBase64 = e.target.result;
+
+                // Cập nhật trong CSDL bảng users
+                const { error } = await _supabase
+                    .from('users')
+                    .update({ avatar: newAvatarBase64 })
+                    .eq('id', currentUser.id);
+
+                if (error) {
+                    alert('Lỗi cập nhật avatar: ' + error.message);
+                } else {
+                    currentUser.avatar = newAvatarBase64;
+                    localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+                    hienThiUserHeader();
+                    alert('Đổi ảnh đại diện thành công!');
+                    location.reload();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function dangXuat() {
+            if (confirm('Bạn có muốn đăng xuất tài khoản không?')) {
+                localStorage.removeItem('thapcam_current_user');
+                location.reload();
+            }
+        }
+
+        function hienThiUserHeader() {
+            if (currentUser) {
+                document.getElementById('headerName').innerText = currentUser.name;
+                document.getElementById('headerAvatar').src = currentUser.avatar || 'https://via.placeholder.com/40';
+                document.getElementById('changeAvatarWrapper').style.display = 'inline-block';
+            }
+        }
+
+        // --- ĐĂNG BÀI VIẾT ---
+        async function dangBai() {
+            if (!currentUser) {
+                document.getElementById('authModal').style.display = 'flex';
+                return;
+            }
+
+            const content = document.getElementById('contentInput').value.trim();
+            if (!content && !tempMediaBase64) {
+                alert('Vui lòng nhập nội dung hoặc chọn ảnh/video!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('posts')
+                .insert([{
+                    author: currentUser.name,
+                    avatar: currentUser.avatar,
+                    content: content,
+                    media_url: tempMediaBase64,
+                    likes: 0
+                }]);
+
+            if (error) {
+                alert('Lỗi khi đăng bài: ' + error.message);
+            } else {
+                document.getElementById('contentInput').value = '';
+                tempMediaisplay = 'block';
                 document.getElementById('authTitle').innerText = 'Khôi phục mật khẩu';
             } else {
                 document.getElementById('loginForm').style.display = 'block';
