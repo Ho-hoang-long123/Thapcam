@@ -3,145 +3,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Acc - Thập Cẩm Store</title>
+    <title>NEXUS STORE - Chợ Tài Khoản Game Uy Tín</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #ff4757;
-            --primary-hover: #ff6b81;
-            --bg-color: #f1f2f6;
-            --card-bg: #ffffff;
-            --text-color: #2f3640;
-            --text-secondary: #718093;
-            --border-color: #dcdde1;
+            --bg-dark: #0f1015;
+            --surface: #181922;
+            --surface-hover: #222430;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.3);
+            --text-main: #f1f2f6;
+            --text-muted: #8b8da3;
+            --danger: #ff3366;
+            --border: #2a2d3d;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* Navigation Bar */
+        .nexus-nav { background: var(--surface); border-bottom: 1px solid var(--border); height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; position: sticky; top: 0; z-index: 100; }
+        .nexus-logo { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .nexus-user-pill { background: var(--surface-hover); border: 1px solid var(--border); padding: 8px 16px; border-radius: 30px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; }
+        .nexus-user-pill:hover { border-color: var(--accent); }
+        .nexus-user-pill img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+
+        /* Layout Container */
+        .nexus-container { max-width: 1200px; width: 100%; margin: 30px auto; padding: 0 20px; flex: 1; }
+
+        /* Dashboard Đăng Bài (Chỉ Admin) */
+        .nexus-admin-panel { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 25px; margin-bottom: 30px; display: none; box-shadow: 0 0 20px var(--accent-glow); }
+        .nexus-admin-panel h2 { color: var(--accent); margin-bottom: 15px; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        .nexus-input-group { margin-bottom: 15px; }
+        .nexus-input-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; }
+        .nexus-control { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; }
+        .nexus-control:focus { border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+        textarea.nexus-control { resize: vertical; height: 100px; }
+
+        .nexus-btn { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .nexus-btn:hover { background: #00cc6a; box-shadow: 0 0 15px var(--accent-glow); }
+        .nexus-btn-danger { background: var(--danger); color: #fff; }
+        .nexus-btn-danger:hover { background: #e02454; box-shadow: 0 0 15px rgba(255, 51, 102, 0.3); }
+
+        /* Shop Grid Hiển Thị Sản Phẩm */
+        .nexus-grid-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; border-left: 4px solid var(--accent); padding-left: 12px; }
+        .nexus-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         
-        /* Navbar Shop */
-        header { background: var(--card-bg); height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        header h2 { color: var(--primary-color); margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-        .user-profile-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; background: #f8f9fa; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-color); cursor: pointer; }
-        .user-profile-badge img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+        .nexus-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+        .nexus-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .nexus-card-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border); }
+        .nexus-card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .nexus-card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+        .nexus-card-price { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 10px; }
+        .nexus-card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; margin-bottom: 15px; }
 
-        .container { max-width: 800px; margin: 20px auto; padding: 0 10px; }
-        .card { background: var(--card-bg); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03); }
-
-        /* Khung đăng bài của Admin */
-        .admin-box { border-left: 5px solid var(--primary-color); display: none; }
-        .admin-box h3 { margin-top: 0; color: var(--primary-color); font-size: 18px; }
-        .form-control { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; outline: none; font-size: 14px; font-family: inherit; }
-        textarea.form-control { resize: vertical; height: 90px; }
-        
-        .shop-btn { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .shop-btn:hover { background: var(--primary-hover); }
-
-        /* Lưới sản phẩm (Shop Grid) */
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
-        .product-card { background: var(--card-bg); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between; }
-        .product-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
-        .product-body { padding: 12px 15px; }
-        .product-title { font-weight: bold; font-size: 16px; margin-bottom: 6px; color: var(--text-color); }
-        .product-price { color: #e74c3c; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-        .product-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 12px; word-break: break-word; }
-        .buy-btn { width: 100%; background: #2ed573; color: white; border: none; padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; font-size: 14px; display: block; text-decoration: none; box-sizing: border-box; transition: 0.2s; }
-        .buy-btn:hover { background: #26af5f; }
-
-        /* Modal Đăng nhập / Đăng ký / Quên MK */
-        #authModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); }
-        .auth-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
-        .auth-box h3 { color: var(--primary-color); margin-top: 0; }
-        .avatar-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); margin: 0 auto 10px auto; display: block; background: #ddd; }
-        .switch-auth { color: #0984e3; cursor: pointer; font-size: 13px; margin-top: 12px; display: block; font-weight: 600; }
+        /* Modal Overlay */
+        .nexus-modal { position: fixed; inset: 0; background: rgba(10, 11, 15, 0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .nexus-modal-box { background: var(--surface); border: 1px solid var(--border); width: 100%; max-width: 400px; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .nexus-modal-box h2 { color: var(--accent); font-size: 22px; margin-bottom: 20px; text-align: center; }
+        .nexus-link-action { text-align: center; margin-top: 15px; font-size: 13px; color: var(--accent); cursor: pointer; display: block; font-weight: 600; }
+        .nexus-link-action:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <!-- Modal Xác thực & Tài khoản -->
-    <div id="authModal">
-        <div class="auth-box">
-            <h3 id="authTitle">Đăng nhập Shop Acc</h3>
-            
-            <!-- 1. FORM ĐĂNG NHẬP -->
-            <div id="loginForm">
-                <input type="text" id="loginUser" class="form-control" placeholder="Tên tài khoản hoặc Email">
-                <input type="password" id="loginPass" class="form-control" placeholder="Mật khẩu">
-                <button class="shop-btn" style="width: 100%;" onclick="xuLyDangNhap()">Đăng nhập</button>
-                <span class="switch-auth" onclick="chuyenForm('forgot')">Quên mật khẩu?</span>
-                <span class="switch-auth" onclick="chuyenForm('register')" style="color: #2ed573;">Chưa có tài khoản? Đăng ký ngay</span>
-            </div>
+    <!-- MODAL XÁC THỰC (ĐĂNG NHẬP / ĐĂNG KÝ / QUÊN MK) -->
+    <div id="authModal" class="nexus-modal" style="display: none;">
+        <div class="nexus-modal-box">
+            <h2 id="modalTitle">ĐĂNG NHẬP HỆ THỐNG</h2>
 
-            <!-- 2. FORM ĐĂNG KÝ -->
-            <div id="registerForm" style="display: none;">
-                <img id="previewImg" class="avatar-preview" src="https://via.placeholder.com/70" alt="Avatar">
-                <div style="margin-bottom: 10px;">
-                    <label class="shop-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px; background: #718093;">
-                        Chọn Avatar <input type="file" id="regAvatarFile" accept="image/*" onchange="previewAvatar(event)" style="display:none;">
-                    </label>
+            <!-- Form Đăng Nhập -->
+            <div id="boxLogin">
+                <div class="nexus-input-group">
+                    <label>Tài khoản hoặc Email</label>
+                    <input type="text" id="logUser" class="nexus-control" placeholder="Nhập tên đăng nhập...">
                 </div>
-                <input type="text" id="regName" class="form-control" placeholder="Tên tài khoản của bạn">
-                <input type="email" id="regEmail" class="form-control" placeholder="Địa chỉ Email">
-                <input type="password" id="regPass" class="form-control" placeholder="Mật khẩu">
-                <button class="shop-btn" style="width: 100%; background: #2ed573;" onclick="xuLyDangKy()">Đăng ký tài khoản</button>
-                <span class="switch-auth" onclick="chuyenForm('login')">Đã có tài khoản? Đăng nhập</span>
+                <div class="nexus-input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="logPass" class="nexus-control" placeholder="••••••••">
+                </div>
+                <button class="nexus-btn" style="width: 100%; justify-content: center;" onclick="xuLyDangNhap()">Đăng Nhập</button>
+                <span class="nexus-link-action" onclick="doiTabAuth('register')">Chưa có tài khoản? Đăng ký ngay</span>
+                <span class="nexus-link-action" onclick="doiTabAuth('forgot')" style="color: var(--text-muted); margin-top: 5px;">Quên mật khẩu?</span>
             </div>
 
-            <!-- 3. FORM QUÊN MẬT KHẨU -->
-            <div id="forgotForm" style="display: none;">
-                <p style="font-size: 13px; color: var(--text-secondary);">Nhập email đã đăng ký để nhận mã khôi phục.</p>
-                <input type="email" id="forgotEmail" class="form-control" placeholder="Nhập Email của bạn">
-                <button class="shop-btn" style="width: 100%;" onclick="guiMaKhoiPhuc()">Gửi mã xác nhận OTP</button>
-                <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
+            <!-- Form Đăng Ký -->
+            <div id="boxRegister" style="display: none;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img id="regAvatarPreview" src="https://via.placeholder.com/80" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); margin-bottom: 8px;">
+                    <input type="file" id="regAvatarInput" accept="image/*" onchange="chonAvatar(event)" style="display: none;">
+                    <button class="nexus-btn" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('regAvatarInput').click()">Chọn Ảnh Đại Diện</button>
+                </div>
+                <div class="nexus-input-group">
+                    <label>Tên tài khoản</label>
+                    <input type="text" id="regName" class="nexus-control" placeholder="Nhập tên hiển thị...">
+                </div>
+                <div class="nexus-input-group">
+                    <label>Email liên kết</label>
+                    <input type="email" id="regEmail" class="nexus-control" placeholder="name@example.com">
+                </div>
+                <div class="nexus-input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="regPass" class="nexus-control" placeholder="••••••••">
+                </div>
+                <button class="nexus-btn" style="width: 100%; justify-content: center; background: #00ff88;" onclick="xuLyDangKy()">Hoàn Tất Đăng Ký</button>
+                <span class="nexus-link-action" onclick="doiTabAuth('login')">Đã có tài khoản? Đăng nhập</span>
             </div>
 
-            <!-- 4. FORM NHẬP OTP & ĐỔI MẬT KHẨU -->
-            <div id="resetForm" style="display: none;">
-                <p style="font-size: 13px; color: var(--text-secondary);">Kiểm tra email lấy mã OTP và nhập mật khẩu mới.</p>
-                <input type="text" id="otpCode" class="form-control" placeholder="Mã OTP từ email">
-                <input type="password" id="newPass" class="form-control" placeholder="Mật khẩu mới">
-                <button class="shop-btn" style="width: 100%; background: #e74c3c;" onclick="xacNhanDoiMatKhau()">Đổi mật khẩu mới</button>
-                <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
+            <!-- Form Quên Mật Khẩu -->
+            <div id="boxForgot" style="display: none;">
+                <div class="nexus-input-group">
+                    <label>Email đã đăng ký</label>
+                    <input type="email" id="forgotEmail" class="nexus-control" placeholder="Nhập email khôi phục...">
+                </div>
+                <button class="nexus-btn" style="width: 100%; justify-content: center;" onclick="guiMaOTP()">Gửi Mã OTP Qua Email</button>
+                <span class="nexus-link-action" onclick="doiTabAuth('reset')"><i class="fa-solid fa-key"></i> Đã có mã OTP? Đổi mật khẩu ngay</span>
+                <span class="nexus-link-action" onclick="doiTabAuth('login')" style="color: var(--text-muted); margin-top: 5px;">Quay lại đăng nhập</span>
+            </div>
+
+            <!-- Form Đổi Mật Khẩu Bằng OTP -->
+            <div id="boxReset" style="display: none;">
+                <div class="nexus-input-group">
+                    <label>Mã OTP nhận được từ email</label>
+                    <input type="text" id="otpToken" class="nexus-control" placeholder="Nhập mã xác nhận...">
+                </div>
+                <div class="nexus-input-group">
+                    <label>Mật khẩu mới</label>
+                    <input type="password" id="newPassword" class="nexus-control" placeholder="Nhập mật khẩu mới...">
+                </div>
+                <button class="nexus-btn nexus-btn-danger" style="width: 100%; justify-content: center;" onclick="xacNhanDoiMK()">Xác Nhận Đổi Mật Khẩu</button>
+                <span class="nexus-link-action" onclick="doiTabAuth('login')">Quay lại đăng nhập</span>
             </div>
         </div>
     </div>
 
-    <!-- Header Shop -->
-    <header>
-        <h2><i class="fa-solid fa-store"></i> THẬP CẨM SHOP</h2>
-        <div class="user-profile-badge" onclick="dangXuat()" title="Bấm để đăng xuất">
-            <img id="headerAvatar" src="" alt="Ava">
-            <span id="headerName">Khách</span> <i class="fa-solid fa-right-from-bracket" style="font-size: 12px; color: var(--text-secondary);"></i>
+    <!-- Thanh Điều Hướng -->
+    <header class="nexus-nav">
+        <div class="nexus-logo"><i class="fa-solid fa-shield-halved"></i> NEXUS STORE</div>
+        <div class="nexus-user-pill" onclick="xuLyDangXuat()" title="Nhấn để đăng xuất">
+            <img id="navAvatar" src="https://via.placeholder.com/32" alt="Avatar">
+            <span id="navUsername">Khách vãng lai</span>
+            <i class="fa-solid fa-power-off" style="color: var(--danger); font-size: 12px; margin-left: 5px;"></i>
         </div>
     </header>
 
-    <div class="container">
-        <!-- KHUNG ĐĂNG BÀI BÁN ACC (CHỈ HIỂN THỊ CHO ADMIN: hoanglong19523) -->
-        <div id="adminCreateBox" class="card admin-box">
-            <h3><i class="fa-solid fa-circle-plus"></i> Đăng Tài Khoản Mới (Khu vực Admin)</h3>
-            <input type="text" id="accTitle" class="form-control" placeholder="Tên tài khoản / Tựa game (VD: Acc Liên Quân VIP Full Tướng)">
-            <input type="text" id="accPrice" class="form-control" placeholder="Giá tiền (VD: 150.000đ)">
-            <textarea id="accDesc" class="form-control" placeholder="Mô tả chi tiết thông tin acc (Tướng, trang phục, rank, thông tin trắng thông tin,...)..."></textarea>
-            
-            <div style="margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-secondary);">
-                Hình ảnh Acc: <input type="file" id="accImageFile" accept="image/*" onchange="previewAccImage(event)">
+    <!-- Giao Diện Chính -->
+    <div class="nexus-container">
+        
+        <!-- BẢNG ĐĂNG BÀI ADMIN (CHỈ HOANGLONG19523 MỚI THẤY) -->
+        <div id="adminPanel" class="nexus-admin-panel">
+            <h2><i class="fa-solid fa-circle-plus"></i> KHU VỰC QUẢN TRỊ - ĐĂNG BÁN TÀI KHOẢN</h2>
+            <div class="nexus-input-group">
+                <label>Tiêu đề / Tên Tài Khoản</label>
+                <input type="text" id="prodTitle" class="nexus-control" placeholder="Ví dụ: Acc Liên Quân VIP Full Skin Cực Hiếm...">
             </div>
-            <div id="imagePreviewContainer" style="margin-bottom: 10px;"></div>
-
-            <button class="shop-btn" onclick="dangBanAcc()">Đăng Bán Ngay</button>
+            <div class="nexus-input-group">
+                <label>Giá Bán (VNĐ)</label>
+                <input type="text" id="prodPrice" class="nexus-control" placeholder="Ví dụ: 250.000đ">
+            </div>
+            <div class="nexus-input-group">
+                <label>Mô Tả Chi Tiết Acc</label>
+                <textarea id="prodDesc" class="nexus-control" placeholder="Rank hiện tại, bảng ngọc, thông tin bảo mật, trắng thông tin..."></textarea>
+            </div>
+            <div class="nexus-input-group">
+                <label>Hình Ảnh Minh Họa</label>
+                <input type="file" id="prodImgFile" accept="image/*" class="nexus-control" onchange="chonAnhSanPham(event)" style="padding: 8px;">
+            </div>
+            <div id="previewContainer" style="margin-bottom: 15px;"></div>
+            <button class="nexus-btn" onclick="dangBanAccMoi()"><i class="fa-solid fa-upload"></i> Đăng Bán Lên Shop</button>
         </div>
 
-        <!-- DANH SÁCH SẢN PHẨM ACC -->
-        <h3 style="margin-bottom: 15px; border-left: 4px solid var(--primary-color); padding-left: 10px;">Danh Sách Tài Khoản Đang Bán</h3>
-        <div id="shopFeed" class="shop-grid">Đang tải danh sách tài khoản...</div>
+        <!-- DANH SÁCH SẢN PHẨM -->
+        <div class="nexus-grid-title">DANH SÁCH TÀI KHOẢN SẴN SÀNG</div>
+        <div id="productFeed" class="nexus-product-grid">
+            <div style="color: var(--text-muted);">Đang tải dữ liệu cửa hàng...</div>
+        </div>
     </div>
 
-    <!-- Supabase SDK -->
+    <!-- Tích hợp thư viện Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
 
         const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let activeUser = JSON.parse(localStorage.getItem('nexus_user_session')) || null;
+        let base64AvatarTemp = '';
+        let base64ProductImgTemp = '';
+
+        window.onload = () => {
+            kiemTraTrangThaiDangNhap();
+            taiDanhSachSanPham();
+        };
+
+        // Chuyển đổi qua lại các tab Form Auth
+        function doiTabAuth(tabName) {
+            ['boxLogin', 'boxRegister', 'boxForgot', 'boxReset'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            const titles = {
+                'login': 'ĐĂNG NHẬP HỆ THỐNG',
+                'register': 'TẠO TÀI KHOẢN MỚI',
+                'forgot': 'KHÔI PHỤC MẬT KHẨU',
+                'reset': 'XÁC THỰC MÃ OTP'
+            };
+            document.getElementById('modalTitle').innerText = titles[tabName];
+            if(tabName === 'login') document.getElementById('boxLogin').style.display = 'block';
+            if(tabName === 'register') document.getElementById('boxRegister').style.display = 'block';
+            if(tabName === 'forgot') document.getElementById('boxForgot').style.display = 'block';
+            if(tabName === 'reset') document.getElementById('boxReset').style.display = 'block';
+        }
+
+        function kiemTraTrangThaiDangNhap() {
+            if (!activeUser) {
+                document.getElementById('authModal').style.display = 'flex';
+                doiTabAuth('login');
+            } else {
+                document.getElementById('authModal').style.display = 'none';
+                document.getElementById('navUsername').innerText = activeUser.name;
+                document.getElementById('navAvatar').src = activeUser.avatar || 'https://via.placeholder.com/32';
+
+                // Bật bảng admin nếu chính xác tài khoản yêu cầu
+                if (activeUser.name === 'hoanglong19523' && activeUser.password === 'Long1510@') {
+                    document.getElementById('adminPanel').style.display = 'block';
+                }
+            }
+        }
+
+        function chonAvatar(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    base64AvatarTemp = evt.target.result;
+                    document.getElementById('regAvatarPreview').src = base64AvatarTemp;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function chonAnhSanPham(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    base64ProductImgTemp = evt.target.result;
+                    document.getElementById('previewContainer').innerHTML = `<img src="${base64ProductImgTemp}" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border);">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Đăng ký tài khoản
+        async function xuLyDangKy() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPass').value.trim();
+            const avatar = base64AvatarTemp || 'https://via.placeholder.com/150';
+
+            if(!name || !email || !password) {
+                alert('Vui lòng điền đầy đủ thông tin đăng ký!');
+                return;
+            }
+
+            const { error } = await db.from('users').insert([{ name, email, password, avatar }]);
+            if(error) {
+                alert('Lỗi đăng ký (Email có thể đã tồn tại): ' + error.message);
+            } else {
+                alert('Đăng ký thành công! Hãy tiến hành đăng nhập.');
+                doiTabAuth('login');
+            }
+        }
+
+        // Đăng nhập
+        async function xuLyDangNhap() {
+            const userInput = document.getElementById('logUser').value.trim();
+            const passInput = document.getElementById('logPass').value.trim();
+
+            if(!userInput || !passInput) {
+                alert('Vui lòng nhập tài khoản và mật khẩu!');
+                return;
+            }
+
+            const { data, error } = await db.from('users')
+                .select('*')
+                .or(`name.eq.${userInput},email.eq.${userInput}`)
+                .eq('password', passInput);
+
+            if(error || !data || data.length === 0) {
+                alert('Sai tên đăng nhập hoặc mật khẩu!');
+                return;
+            }
+
+            activeUser = data[0];
+            localStorage.setItem('nexus_user_session', JSON.stringify(activeUser));
+            location.reload();
+        }
+
+        function xuLyDangXuat() {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                localStorage.removeItem('nexus_user_session');
+                location.reload();
+            }
+        }
+
+        // Gửi mã OTP khôi phục mật khẩu
+        async function guiMaOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            if(!email) { alert('Vui lòng nhập email của bạn!'); return; }
+            
+            const { error } = await db.auth.resetPasswordForEmail(email);
+            if(error) {
+                alert('Lỗi: ' + error.message);
+            } else {
+                alert('Đã gửi mã OTP đến email của bạn! Hãy bấm vào Đã có mã OTP để đổi mật khẩu.');
+                doiTabAuth('reset');
+            }
+        }
+
+        // Xác nhận đổi mật khẩu qua OTP
+        async function xacNhanDoiMK() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const token = document.getElementById('otpToken').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+
+            if(!token || !newPassword) { alert('Vui lòng điền mã OTP và mật khẩu mới!'); return; }
+
+            const { error: otpErr } = await db.auth.verifyOtp({ email, token, type: 'recovery' });
+            if(otpErr) {
+                alert('Mã OTP không hợp lệ hoặc đã hết hạn!');
+                return;
+            }
+
+            const { error: updateErr } = await db.from('users').update({ password: newPassword }).eq('email', email);
+            if(updateErr) {
+                alert('Lỗi cập nhật mật khẩu: ' + updateErr.message);
+            } else {
+                alert('Đổi mật khẩu thành công! Hãy đăng nhập lại.');
+                doiTabAuth('login');
+            }
+        }
+
+        // Admin đăng bán sản phẩm mới
+        async function dangBanAccMoi() {
+            const title = document.getElementById('prodTitle').value.trim();
+            const price = document.getElementById('prodPrice').value.trim();
+            const desc = document.getElementById('prodDesc').value.trim();
+
+            if(!title || !price || !desc || !base64ProductImgTemp) {
+                alert('Vui lòng điền đầy đủ thông tin và chọn ảnh minh họa sản phẩm!');
+                return;
+            }
+
+            const { error } = await db.from('posts').insert([{
+                author: activeUser.name,
+                avatar: activeUser.avatar,
+                content: title,       // Lưu tiêu đề sản phẩm
+                media_url: base64ProductImgTemp, // Lưu ảnh sản phẩm
+                likes: price          // Tận dụng lưu giá tiền sản phẩm
+            }]);
+
+            if(error) {
+                alert('Lỗi đăng bán sản phẩm: ' + error.RL, SUPABASE_ANON_KEY);
 
         let currentUser = JSON.parse(localStorage.getItem('thapcam_shop_user')) || null;
         let tempAvatarBase64 = '';
