@@ -2,10 +2,131 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang web của tôi</title>
+    <title>Trang Web Đầu Tiên Của Tôi</title>
+    <style>
+        /* Đây là phần CSS dùng để trang trí cho trang web */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5; /* Màu nền nhạt giống Facebook */
+        }
+
+        /* Phần đầu trang (Header) */
+        header {
+            background-color: #ffffff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between; /* Căn chỉnh các phần tử ra xa nhau */
+            align-items: center;
+            position: fixed; /* Cố định đầu trang ở trên cùng */
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1877f2; /* Màu xanh thương hiệu */
+        }
+
+        /* Phần nội dung chính (Main content) */
+        main {
+            margin-top: 80px; /* Khoảng cách để không bị che bởi header cố định */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .post-box {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px; /* Giới hạn chiều rộng bài đăng */
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 10px;
+        }
+
+        .user-info h3 { margin: 0; font-size: 16px; }
+        .user-info span { color: #65676b; font-size: 12px; }
+
+        .post-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #1c1e21;
+        }
+
+        /* Phần chân trang (Footer) */
+        footer {
+            background-color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            color: #65676b;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+        }
+
+        @media (min-width: 768px) {
+            main { padding: 20px 40px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Chào mừng ông bạn đến với web của tôi!</h1>
-    <p>Web này chạy online trên GitHub ngon lành cành đào rồi nhé.</p>
+    <!-- Cấu trúc trang web -->
+    <header>
+        <div class="logo">MY WEBSITE</div>
+        <div>Đăng nhập</div>
+    </header>
+
+    <main>
+        <div class="post-box">
+            <div class="post-header">
+                <div class="avatar"></div> <!-- Ảnh đại diện giả lập -->
+                <div class="user-info">
+                    <h3>Bạn của tôi</h3>
+                    <span>1 giờ trước</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>Chào mọi người! Đây là một bài đăng mẫu trên trang web đầu tiên của mình. Mình đang học cách tạo web với GitHub Pages. Hy vọng mọi người sẽ thích nó!</p>
+            </div>
+        </div>
+
+        <!-- Thêm các bài đăng khác ở đây -->
+        <div class="post-box">
+            <div class="post-header">
+                 <div class="avatar"></div>
+                 <div class="user-info">
+                    <h3>Tin tức hôm nay</h3>
+                    <span>2 giờ trước</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>Trời hôm nay đẹp quá! Mọi người có kế hoạch gì cho cuối tuần chưa?</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Trang web của tôi</p>
+    </footer>
 </body>
 </html>
