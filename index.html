@@ -2,131 +2,114 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang Web Đầu Tiên Của Tôi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thập Cẩm Network</title>
     <style>
-        /* Đây là phần CSS dùng để trang trí cho trang web */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5; /* Màu nền nhạt giống Facebook */
-        }
-
-        /* Phần đầu trang (Header) */
-        header {
-            background-color: #ffffff;
-            padding: 15px 20px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between; /* Căn chỉnh các phần tử ra xa nhau */
-            align-items: center;
-            position: fixed; /* Cố định đầu trang ở trên cùng */
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1877f2; /* Màu xanh thương hiệu */
-        }
-
-        /* Phần nội dung chính (Main content) */
-        main {
-            margin-top: 80px; /* Khoảng cách để không bị che bởi header cố định */
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .post-box {
-            background-color: #ffffff;
-            width: 100%;
-            max-width: 600px; /* Giới hạn chiều rộng bài đăng */
-            border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 15px;
-        }
-
-        .post-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #ccc;
-            margin-right: 10px;
-        }
-
-        .user-info h3 { margin: 0; font-size: 16px; }
-        .user-info span { color: #65676b; font-size: 12px; }
-
-        .post-content {
-            font-size: 14px;
-            line-height: 1.5;
-            color: #1c1e21;
-        }
-
-        /* Phần chân trang (Footer) */
-        footer {
-            background-color: #ffffff;
-            padding: 20px;
-            text-align: center;
-            color: #65676b;
-            font-size: 12px;
-            border-top: 1px solid #ddd;
-        }
-
-        @media (min-width: 768px) {
-            main { padding: 20px 40px; }
-        }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: none; }
+        input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #1877f2; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #166fe5; }
+        .post-item { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .post-author { font-weight: bold; color: #050505; }
+        .post-time { font-size: 11px; color: #65676b; margin-top: 3px; }
     </style>
 </head>
 <body>
-    <!-- Cấu trúc trang web -->
-    <header>
-        <div class="logo">MY WEBSITE</div>
-        <div>Đăng nhập</div>
-    </header>
 
-    <main>
-        <div class="post-box">
-            <div class="post-header">
-                <div class="avatar"></div> <!-- Ảnh đại diện giả lập -->
-                <div class="user-info">
-                    <h3>Bạn của tôi</h3>
-                    <span>1 giờ trước</span>
+<div class="container">
+    <h2>Thập Cẩm Network 🚀</h2>
+
+    <!-- Khung đăng bài -->
+    <div class="card">
+        <h3>Đăng trạng thái mới</h3>
+        <input type="text" id="authorInput" placeholder="Tên của bạn...">
+        <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế?"></textarea>
+        <button onclick="dangBai()">Đăng bài</button>
+    </div>
+
+    <!-- Bảng hiển thị bài viết -->
+    <div class="card">
+        <h3>Bảng tin</h3>
+        <div id="feed">Đang tải bài viết...</div>
+    </div>
+</div>
+
+<!-- Nhúng thư viện Supabase từ CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Cấu hình Supabase của bạn
+    const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGgmInJvbGUiOiJhbm9uIiwiaWF0IjoxNzkwNjYwMjI5LCJleHAiOjIxMDYyMzYyMjl9.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8';
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 1. Hàm đăng bài lên Supabase
+    async function dangBai() {
+        const author = document.getElementById('authorInput').value.trim();
+        const content = document.getElementById('contentInput').value.trim();
+
+        if (!author || !content) {
+            alert('Vui lòng nhập tên và nội dung!');
+            return;
+        }
+
+        const { error } = await _supabase
+            .from('posts')
+            .insert([{ author: author, content: content }]);
+
+        if (error) {
+            alert('Lỗi khi đăng: ' + error.message);
+        } else {
+            document.getElementById('contentInput').value = ''; // Xóa ô nội dung
+            layBaiViet(); // Tải lại danh sách
+        }
+    }
+
+    // 2. Hàm lấy tất cả bài viết từ Supabase hiển thị lên web
+    async function layBaiViet() {
+        const { data, error } = await _supabase
+            .from('posts')
+            .select('*')
+            .order('created_at', { ascending: false }); // Lấy bài mới nhất lên trên
+
+        const feedDiv = document.getElementById('feed');
+        if (error) {
+            feedDiv.innerHTML = 'Lỗi tải dữ liệu: ' + error.message;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            feedDiv.innerHTML = 'Chưa có bài viết nào. Hãy là người đầu tiên đăng bài!';
+            return;
+        }
+
+        let html = '';
+        data.forEach(post => {
+            let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('vi-VN') : '';
+            html += `
+                <div class="post-item">
+                    <div class="post-author">${escapeHtml(post.author)}</div>
+                    <div style="margin-top: 5px;">${escapeHtml(post.content)}</div>
+                    <div class="post-time">${timeStr}</div>
                 </div>
-            </div>
-            <div class="post-content">
-                <p>Chào mọi người! Đây là một bài đăng mẫu trên trang web đầu tiên của mình. Mình đang học cách tạo web với GitHub Pages. Hy vọng mọi người sẽ thích nó!</p>
-            </div>
-        </div>
+            `;
+        });
+        feedDiv.innerHTML = html;
+    }
 
-        <!-- Thêm các bài đăng khác ở đây -->
-        <div class="post-box">
-            <div class="post-header">
-                 <div class="avatar"></div>
-                 <div class="user-info">
-                    <h3>Tin tức hôm nay</h3>
-                    <span>2 giờ trước</span>
-                </div>
-            </div>
-            <div class="post-content">
-                <p>Trời hôm nay đẹp quá! Mọi người có kế hoạch gì cho cuối tuần chưa?</p>
-            </div>
-        </div>
-    </main>
+    // Hàm chống lỗi bảo mật hiển thị ký tự HTML
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
 
-    <footer>
-        <p>&copy; 2024 - Trang web của tôi</p>
-    </footer>
+    // Tự động tải bài viết khi vừa mở web
+    layBaiViet();
+</script>
+
 </body>
 </html>
