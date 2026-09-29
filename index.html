@@ -3,145 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS STORE - Chợ Tài Khoản Game Uy Tín</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-dark: #0f1015;
-            --surface: #181922;
-            --surface-hover: #222430;
-            --accent: #00ff88;
-            --accent-glow: rgba(0, 255, 136, 0.3);
-            --text-main: #f1f2f6;
-            --text-muted: #8b8da3;
-            --danger: #ff3366;
-            --border: #2a2d3d;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-
-        /* Navigation Bar */
-        .nexus-nav { background: var(--surface); border-bottom: 1px solid var(--border); height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; position: sticky; top: 0; z-index: 100; }
-        .nexus-logo { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .nexus-user-pill { background: var(--surface-hover); border: 1px solid var(--border); padding: 8px 16px; border-radius: 30px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; }
-        .nexus-user-pill:hover { border-color: var(--accent); }
-        .nexus-user-pill img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-
-        /* Layout Container */
-        .nexus-container { max-width: 1200px; width: 100%; margin: 30px auto; padding: 0 20px; flex: 1; }
-
-        /* Dashboard Đăng Bài (Chỉ Admin) */
-        .nexus-admin-panel { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 25px; margin-bottom: 30px; display: none; box-shadow: 0 0 20px var(--accent-glow); }
-        .nexus-admin-panel h2 { color: var(--accent); margin-bottom: 15px; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        .nexus-input-group { margin-bottom: 15px; }
-        .nexus-input-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; }
-        .nexus-control { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; }
-        .nexus-control:focus { border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
-        textarea.nexus-control { resize: vertical; height: 100px; }
-
-        .nexus-btn { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
-        .nexus-btn:hover { background: #00cc6a; box-shadow: 0 0 15px var(--accent-glow); }
-        .nexus-btn-danger { background: var(--danger); color: #fff; }
-        .nexus-btn-danger:hover { background: #e02454; box-shadow: 0 0 15px rgba(255, 51, 102, 0.3); }
-
-        /* Shop Grid Hiển Thị Sản Phẩm */
-        .nexus-grid-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; border-left: 4px solid var(--accent); padding-left: 12px; }
-        .nexus-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        
-        .nexus-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
-        .nexus-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .nexus-card-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border); }
-        .nexus-card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .nexus-card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
-        .nexus-card-price { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 10px; }
-        .nexus-card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; margin-bottom: 15px; }
-
-        /* Modal Overlay */
-        .nexus-modal { position: fixed; inset: 0; background: rgba(10, 11, 15, 0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .nexus-modal-box { background: var(--surface); border: 1px solid var(--border); width: 100%; max-width: 400px; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        .nexus-modal-box h2 { color: var(--accent); font-size: 22px; margin-bottom: 20px; text-align: center; }
-        .nexus-link-action { text-align: center; margin-top: 15px; font-size: 13px; color: var(--accent); cursor: pointer; display: block; font-weight: 600; }
-        .nexus-link-action:hover { text-decoration: underline; }
-    </style>
+    <title>AI Chatbot Supabase</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Thư viện Supabase JS client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-    <!-- MODAL XÁC THỰC (ĐĂNG NHẬP / ĐĂNG KÝ / QUÊN MK) -->
-    <div id="authModal" class="nexus-modal" style="display: none;">
-        <div class="nexus-modal-box">
-            <h2 id="modalTitle">ĐĂNG NHẬP HỆ THỐNG</h2>
-
-            <!-- Form Đăng Nhập -->
-            <div id="boxLogin">
-                <div class="nexus-input-group">
-                    <label>Tài khoản hoặc Email</label>
-                    <input type="text" id="logUser" class="nexus-control" placeholder="Nhập tên đăng nhập...">
-                </div>
-                <div class="nexus-input-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="logPass" class="nexus-control" placeholder="••••••••">
-                </div>
-                <button class="nexus-btn" style="width: 100%; justify-content: center;" onclick="xuLyDangNhap()">Đăng Nhập</button>
-                <span class="nexus-link-action" onclick="doiTabAuth('register')">Chưa có tài khoản? Đăng ký ngay</span>
-                <span class="nexus-link-action" onclick="doiTabAuth('forgot')" style="color: var(--text-muted); margin-top: 5px;">Quên mật khẩu?</span>
-            </div>
-
-            <!-- Form Đăng Ký -->
-            <div id="boxRegister" style="display: none;">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <img id="regAvatarPreview" src="https://via.placeholder.com/80" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); margin-bottom: 8px;">
-                    <input type="file" id="regAvatarInput" accept="image/*" onchange="chonAvatar(event)" style="display: none;">
-                    <button class="nexus-btn" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('regAvatarInput').click()">Chọn Ảnh Đại Diện</button>
-                </div>
-                <div class="nexus-input-group">
-                    <label>Tên tài khoản</label>
-                    <input type="text" id="regName" class="nexus-control" placeholder="Nhập tên hiển thị...">
-                </div>
-                <div class="nexus-input-group">
-                    <label>Email liên kết</label>
-                    <input type="email" id="regEmail" class="nexus-control" placeholder="name@example.com">
-                </div>
-                <div class="nexus-input-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="regPass" class="nexus-control" placeholder="••••••••">
-                </div>
-                <button class="nexus-btn" style="width: 100%; justify-content: center; background: #00ff88;" onclick="xuLyDangKy()">Hoàn Tất Đăng Ký</button>
-                <span class="nexus-link-action" onclick="doiTabAuth('login')">Đã có tài khoản? Đăng nhập</span>
-            </div>
-
-            <!-- Form Quên Mật Khẩu -->
-            <div id="boxForgot" style="display: none;">
-                <div class="nexus-input-group">
-                    <label>Email đã đăng ký</label>
-                    <input type="email" id="forgotEmail" class="nexus-control" placeholder="Nhập email khôi phục...">
-                </div>
-                <button class="nexus-btn" style="width: 100%; justify-content: center;" onclick="guiMaOTP()">Gửi Mã OTP Qua Email</button>
-                <span class="nexus-link-action" onclick="doiTabAuth('reset')"><i class="fa-solid fa-key"></i> Đã có mã OTP? Đổi mật khẩu ngay</span>
-                <span class="nexus-link-action" onclick="doiTabAuth('login')" style="color: var(--text-muted); margin-top: 5px;">Quay lại đăng nhập</span>
-            </div>
-
-            <!-- Form Đổi Mật Khẩu Bằng OTP -->
-            <div id="boxReset" style="display: none;">
-                <div class="nexus-input-group">
-                    <label>Mã OTP nhận được từ email</label>
-                    <input type="text" id="otpToken" class="nexus-control" placeholder="Nhập mã xác nhận...">
-                </div>
-                <div class="nexus-input-group">
-                    <label>Mật khẩu mới</label>
-                    <input type="password" id="newPassword" class="nexus-control" placeholder="Nhập mật khẩu mới...">
-                </div>
-                <button class="nexus-btn nexus-btn-danger" style="width: 100%; justify-content: center;" onclick="xacNhanDoiMK()">Xác Nhận Đổi Mật Khẩu</button>
-                <span class="nexus-link-action" onclick="doiTabAuth('login')">Quay lại đăng nhập</span>
-            </div>
+    <div class="chat-container">
+        <header>
+            <h2>🤖 AI Assistant</h2>
+        </header>
+        <div id="chat-box" class="chat-box">
+            <!-- Tin nhắn sẽ hiện ở đây -->
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+            <button id="send-btn">Gửi</button>
         </div>
     </div>
 
-    <!-- Thanh Điều Hướng -->
-    <header class="nexus-nav">
-        <div class="nexus-logo"><i class="fa-solid fa-shield-halved"></i> NEXUS STORE</div>
-        <div class="nexus-user-pill" onclick="xuLyDangXuat()" title="Nhấn để đăng xuất">
-            <img id="navAvatar" src="https://via.placeholder.com/32" alt="Avatar">
+    <script src="script.js"></script>
+</body>
+</html>
+<img id="navAvatar" src="https://via.placeholder.com/32" alt="Avatar">
             <span id="navUsername">Khách vãng lai</span>
             <i class="fa-solid fa-power-off" style="color: var(--danger); font-size: 12px; margin-left: 5px;"></i>
         </div>
