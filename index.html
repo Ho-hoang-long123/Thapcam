@@ -3,148 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thập Cẩm Network</title>
+    <title>Shop Acc Uy Tín - Thập Cẩm Store</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --fb-bg: #f0f2f5;
-            --fb-blue: #1877f2;
-            --fb-blue-hover: #166fe5;
-            --fb-card: #ffffff;
-            --fb-text: #050505;
-            --fb-secondary: #65676b;
-            --fb-border: #ced0d4;
+            --shop-bg: #f4f6f9;
+            --shop-primary: #ff4757;
+            --shop-primary-hover: #e84118;
+            --shop-card: #ffffff;
+            --shop-text: #2f3640;
+            --shop-secondary: #718093;
+            --shop-border: #dcdde1;
         }
-        body { font-family: Helvetica, Arial, sans-serif; background: var(--fb-bg); color: var(--fb-text); margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--shop-bg); color: var(--shop-text); margin: 0; padding: 0; }
         
         /* Navbar */
-        header { background: var(--fb-card); height: 56px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        header h2 { color: var(--fb-blue); margin: 0; font-size: 24px; font-weight: bold; }
-        .user-profile-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; background: #e4e6eb; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
-        .user-profile-badge img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+        header { background: var(--shop-card); height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        header h2 { color: var(--shop-primary); margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .user-profile-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; background: #f1f2f6; padding: 6px 14px; border-radius: 30px; cursor: pointer; border: 1px solid var(--shop-border); }
+        .user-profile-badge:hover { background: #dfe4ea; }
+        .user-profile-badge img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
 
-        .container { max-width: 600px; margin: 15px auto; padding: 0 10px; }
-        .card { background: var(--fb-card); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .card { background: var(--shop-card); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
 
-        /* Khung đăng bài */
-        .create-post-box textarea { width: 100%; border: none; outline: none; resize: none; font-size: 16px; padding: 8px 0; font-family: inherit; }
-        .create-post-actions { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f2f5; padding-top: 10px; margin-top: 5px; }
-        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; color: var(--fb-secondary); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-        .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        /* Khung đăng sản phẩm Admin */
+        .admin-box { border-left: 5px solid var(--shop-primary); background: #fffdfd; }
+        .admin-box h3 { margin-top: 0; color: var(--shop-primary); font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .shop-input { width: 100%; padding: 10px; border: 1px solid var(--shop-border); border-radius: 6px; box-sizing: border-box; outline: none; font-size: 14px; font-family: inherit; }
+        .shop-textarea { width: 100%; padding: 10px; border: 1px solid var(--shop-border); border-radius: 6px; box-sizing: border-box; outline: none; resize: vertical; min-height: 90px; font-size: 14px; font-family: inherit; }
         
-        .fb-btn { background: var(--fb-blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .fb-btn:hover { background: var(--fb-blue-hover); }
+        .shop-btn { background: var(--shop-primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .shop-btn:hover { background: var(--shop-primary-hover); }
 
-        /* Bài viết */
-        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .post-author { font-weight: bold; font-size: 15px; color: var(--fb-text); }
-        .post-time { font-size: 12px; color: var(--fb-secondary); }
-        .post-content { font-size: 15px; line-height: 1.5; margin-bottom: 10px; word-break: break-word; }
-        .post-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; }
-
-        .post-actions-bar { display: flex; border-top: 1px solid #e4e6eb; border-bottom: 1px solid #e4e6eb; padding: 4px 0; margin-bottom: 8px; }
-        .action-option { flex: 1; background: none; border: none; color: var(--fb-secondary); font-weight: 600; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 4px; font-size: 14px; }
-        .action-option:hover { background: #f2f2f2; }
-        .action-option.liked { color: var(--fb-blue); }
-
-        /* Modal Đăng nhập / Đăng ký / Quên MK / Đổi Avatar */
-        #authModal, #avatarModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-box { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border: 1px solid #ddd; text-align: center; }
-        .auth-box h3 { color: var(--fb-blue); margin-top: 0; }
-        .auth-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--fb-border); border-radius: 6px; box-sizing: border-box; outline: none; font-size: 14px; }
-        .avatar-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fb-blue); margin: 0 auto 10px auto; display: block; background: #ddd; }
-        .switch-auth { color: var(--fb-blue); cursor: pointer; font-size: 13px; margin-top: 10px; display: block; font-weight: 600; }
+        /* Lưới sản phẩm */
+        .shop-title-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .shop-title-section h3 { margin: 0; font-size: 20px; color: #2f3640; }
         
-        .header-right { display: flex; align-items: center; gap: 10px; }
-        .change-avatar-btn { background: #e4e6eb; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .change-avatar-btn:hover { background: #d8dadf; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid var(--shop-border); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
+        
+        .product-img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+        .product-body { padding: 15px; }
+        .product-name { font-size: 16px; font-weight: bold; margin: 0 0 8px 0; color: #2f3640; }
+        .product-price { color: var(--shop-primary); font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+        .product-desc { font-size: 13px; color: var(--shop-secondary); line-height: 1.4; margin-bottom: 15px; white-space: pre-line; }
+        .product-footer { padding: 0 15px 15px 15px; }
+
+        /* Modal popup chung */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-box { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
+        .auth-box h3 { color: var(--shop-primary); margin-top: 0; }
+        .avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--shop-primary); margin: 0 auto 10px auto; display: block; background: #ddd; }
+        .switch-auth { color: var(--shop-primary); cursor: pointer; font-size: 13px; margin-top: 10px; display: block; font-weight: 600; }
+        .switch-auth:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <!-- Modal Xác thực & Tài khoản -->
-    <div id="authModal">
+    <!-- Modal: Đăng nhập / Đăng ký / Quên MK -->
+    <div id="authModal" class="modal-overlay">
         <div class="auth-box">
-            <h3 id="authTitle">Đăng nhập Thập Cẩm</h3>
+            <h3 id="authTitle">Đăng nhập Shop Acc</h3>
             
-            <!-- 1. FORM ĐĂNG NHẬP -->
+            <!-- FORM ĐĂNG NHẬP -->
             <div id="loginForm">
-                <input type="text" id="loginUser" class="auth-input" placeholder="Tên tài khoản hoặc Email">
-                <input type="password" id="loginPass" class="auth-input" placeholder="Mật khẩu">
-                <button class="fb-btn" style="width: 100%; padding: 10px;" onclick="xuLyDangNhap()">Đăng nhập</button>
+                <input type="text" id="loginUser" class="shop-input" style="margin-bottom: 10px;" placeholder="Tên tài khoản hoặc Email">
+                <input type="password" id="loginPass" class="shop-input" style="margin-bottom: 10px;" placeholder="Mật khẩu">
+                <button type="button" class="shop-btn" style="width: 100%; margin-bottom: 10px;" onclick="xuLyDangNhap()">Đăng nhập</button>
                 <span class="switch-auth" onclick="chuyenForm('forgot')">Quên mật khẩu?</span>
-                <span class="switch-auth" onclick="chuyenForm('register')" style="color: #42b72a;">Chưa có tài khoản? Tạo tài khoản mới</span>
+                <span class="switch-auth" onclick="chuyenForm('register')" style="color: #2ed573;">Chưa có tài khoản? Tạo ngay</span>
             </div>
 
-            <!-- 2. FORM ĐĂNG KÝ -->
+            <!-- FORM ĐĂNG KÝ -->
             <div id="registerForm" style="display: none;">
-                <img id="previewImg" class="avatar-preview" src="https://via.placeholder.com/70" alt="Avatar">
+                <img id="previewImg" class="avatar-preview" src="https://via.placeholder.com/80" alt="Avatar">
                 <div style="margin-bottom: 8px;">
-                    <label class="fb-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px;">
-                        Chọn ảnh đại diện <input type="file" id="regAvatarFile" accept="image/*" onchange="previewAvatar(event)" style="display:none;">
+                    <label class="shop-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px; background: #f1f2f6; color: #2f3640; cursor: pointer; border: 1px solid var(--shop-border);">
+                        <i class="fa-solid fa-camera"></i> Chọn ảnh đại diện
+                        <input type="file" id="regAvatarFile" accept="image/*" onchange="previewAvatar(event)" style="display:none;">
                     </label>
                 </div>
-                <input type="text" id="regName" class="auth-input" placeholder="Tên hiển thị của bạn">
-                <input type="email" id="regEmail" class="auth-input" placeholder="Địa chỉ Email">
-                <input type="password" id="regPass" class="auth-input" placeholder="Mật khẩu">
-                <button class="fb-btn" style="width: 100%; padding: 10px; background: #42b72a;" onclick="xuLyDangKy()">Đăng ký</button>
+                <input type="text" id="regName" class="shop-input" style="margin-bottom: 8px;" placeholder="Tên hiển thị của bạn">
+                <input type="email" id="regEmail" class="shop-input" style="margin-bottom: 8px;" placeholder="Địa chỉ Email">
+                <input type="password" id="regPass" class="shop-input" style="margin-bottom: 10px;" placeholder="Mật khẩu">
+                <button type="button" class="shop-btn" style="width: 100%; margin-bottom: 10px; background: #2ed573;" onclick="xuLyDangKy()">Đăng ký tài khoản</button>
                 <span class="switch-auth" onclick="chuyenForm('login')">Đã có tài khoản? Đăng nhập</span>
             </div>
 
-            <!-- 3. FORM QUÊN MẬT KHẨU (GỬI & NHẬP OTP) -->
+            <!-- FORM QUÊN MẬT KHẨU -->
             <div id="forgotForm" style="display: none;">
-                <!-- Bước 3.1: Nhập email gửi mã -->
-                <div id="forgotStep1">
-                    <p style="font-size: 13px; color: var(--fb-secondary);">Nhập Email tài khoản để nhận mã OTP khôi phục mật khẩu.</p>
-                    <input type="email" id="forgotEmail" class="auth-input" placeholder="Nhập địa chỉ Email của bạn">
-                    <button class="fb-btn" style="width: 100%; padding: 10px; background: var(--fb-blue);" onclick="guiMaOtp()">Gửi mã OTP</button>
-                </div>
-
-                <!-- Bước 3.2: Nhập mã OTP và Mật khẩu mới -->
-                <div id="forgotStep2" style="display: none;">
-                    <p style="font-size: 13px; color: #2e7d32;">Mã OTP đã được "gửi" đến email của bạn. (Mã hiển thị giả lập trên thông báo)</p>
-                    <input type="text" id="inputOtp" class="auth-input" placeholder="Nhập mã OTP 6 chữ số">
-                    <input type="password" id="newPass" class="auth-input" placeholder="Nhập mật khẩu mới">
-                    <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="xacNhanDoiMatKhau()">Xác nhận đổi mật khẩu</button>
-                </div>
-
-                <span class="switch-auth" onclick="chuyenForm('login')" style="margin-top: 15px;">Quay lại đăng nhập</span>
+                <p style="font-size: 13px; color: var(--shop-secondary);">Nhập Email tài khoản cần khôi phục mật khẩu.</p>
+                <input type="email" id="forgotEmail" class="shop-input" style="margin-bottom: 8px;" placeholder="Nhập địa chỉ Email">
+                <input type="password" id="newPass" class="shop-input" style="margin-bottom: 10px;" placeholder="Mật khẩu mới">
+                <button type="button" class="shop-btn" style="width: 100%; margin-bottom: 10px; background: #ffa502;" onclick="xuLyDoiMatKhauMoi()">Xác nhận đổi mật khẩu</button>
+                <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
             </div>
         </div>
     </div>
 
-    <!-- Modal Đổi Avatar -->
-    <div id="avatarModal" style="display: none;">
+    <!-- Modal: Hồ sơ cá nhân -->
+    <div id="profileModal" class="modal-overlay" style="display: none;">
         <div class="auth-box">
-            <h3>Đổi ảnh đại diện</h3>
-            <img id="previewNewAvatar" class="avatar-preview" src="" alt="New Avatar">
-            <div style="margin-bottom: 12px;">
-                <label class="fb-btn" style="display:inline-block; padding: 6px 12px; font-size: 13px;">
-                    Chọn ảnh mới <input type="file" id="newAvatarFile" accept="image/*" onchange="previewNewAvatarFunc(event)" style="display:none;">
+            <h3>Thông tin tài khoản</h3>
+            <img id="profileModalAvatar" class="avatar-preview" src="" alt="Avatar">
+            
+            <div style="margin-bottom: 15px;">
+                <label class="shop-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px; background: #f1f2f6; color: #2f3640; cursor: pointer; border: 1px solid var(--shop-border);">
+                    <i class="fa-solid fa-camera"></i> Đổi ảnh đại diện mới
+                    <input type="file" id="newAvatarFile" accept="image/*" onchange="previewNewAvatar(event)" style="display:none;">
                 </label>
             </div>
-            <button class="fb-btn" style="width: 100%; padding: 8px; background: #42b72a; margin-bottom: 8px;" onclick="capNhatAvatar()">Lưu thay đổi</button>
-            <button class="fb-btn" style="width: 100%; padding: 8px; background: var(--fb-secondary);" onclick="dongModalAvatar()">Hủy</button>
+
+            <p style="font-weight: bold; font-size: 16px; margin: 5px 0 2px 0;" id="profileModalName"></p>
+            <p style="font-size: 12px; color: var(--shop-primary); font-weight: bold; margin-bottom: 15px;" id="profileModalRole"></p>
+            
+            <button type="button" class="shop-btn" style="width: 100%; margin-bottom: 8px;" onclick="luuAvatarMoi()">Lưu thay đổi Avatar</button>
+            <button type="button" class="shop-btn" style="width: 100%; margin-bottom: 12px; background: #718093;" onclick="dongProfileModal()">Đóng</button>
+            
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0;">
+            <span class="switch-auth" style="color: #ff4757;" onclick="dangXuat()">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất tài khoản
+            </span>
         </div>
     </div>
 
-    <!-- Header Facebook -->
+    <!-- Modal Mua Hàng -->
+    <div id="buyModal" class="modal-overlay" style="display: none;">
+        <div class="auth-box" style="text-align: left;">
+            <h3>Xác nhận mua tài khoản</h3>
+            <p id="buyProductTitle" style="font-weight: bold; font-size: 15px; color: #2f3640;"></p>
+            <p id="buyProductPrice" style="color: var(--shop-primary); font-weight: 800; font-size: 16px;"></p>
+            <p style="font-size: 13px; color: var(--shop-secondary);">Vui lòng thanh toán và liên hệ Admin với mã giao dịch: <b style="color:black;" id="buyTransferContent"></b></p>
+            <button type="button" class="shop-btn" style="width: 100%; margin-top: 10px; background: #2ed573;" onclick="alert('Đã gửi yêu cầu mua acc! Admin sẽ liên hệ giao thông tin tài khoản cho bạn.'); dongBuyModal();">Xác nhận đã thanh toán</button>
+            <button type="button" class="shop-btn" style="width: 100%; margin-top: 8px; background: #718093;" onclick="dongBuyModal()">Hủy bỏ</button>
+        </div>
+    </div>
+
+    <!-- Header -->
     <header>
-        <h2>thapcam</h2>
-        <div class="header-right">
-            <button class="change-avatar-btn" onclick="moModalAvatar()"><i class="fa-solid fa-camera"></i> Đổi Avatar</button>
-            <div class="user-profile-badge" onclick="dangXuat()" title="Bấm để đăng xuất">
-                <img id="headerAvatar" src="" alt="Ava">
-                <span id="headerName">Khách</span> <i class="fa-solid fa-right-from-bracket" style="font-size: 12px; color: var(--fb-secondary);"></i>
-            </div>
+        <h2><i class="fa-solid fa-store"></i> Thập Cẩm Store</h2>
+        <div class="user-profile-badge" onclick="moProfileModal()">
+            <img id="headerAvatar" src="https://via.placeholder.com/40" alt="Ava">
+            <span id="headerName">Khách</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: var(--shop-secondary);"></i>
         </div>
     </header>
 
     <div class="container">
-        <!-- Khung đăng bài -->
-        <div class="card create-post-box">
-            <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế?"></textarea>
+        <!-- Khung Đăng Sản Phẩm (CHỈ HIỂN THỊ KHI ĐĂNG NHẬP ADMIN: hoanglong19523) -->
+        <div id="adminCreateSection" class="card admin-box" style="display: none;">
+            <h3><i class="fa-solid fa-circle-plus"></i> Đăng Bán Tài Khoản Mới (Dành cho Admin)</h3>
+            <div class="form-grid">
+                <input type="text" id="prodName" class="shop-input" placeholder="Tên tài khoản / Tựa game (VD: Acc Liên Quân 50 Tướng)">
+                <input type="text" id="prodPrice" class="shop-input" placeholder="Giá tiền (VD: 200.000 đ)">
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--shop-secondary); display: block; margin-bottom: 5px;">Hình ảnh mô tả acc (Bắt buộc):</label>
+                <input type="file" id="prodImageFile" accept="image/*" onchange="previewProductImage(event)" class="shop-input" style="padding: 6px;">
+                <img id="prodImagePreviewImg" style="width: 100px; height: 70px; object-fit: cover; margin-top: 8px; border-radius: 4px; display: none;" alt="Preview">
+            </div>
+
+            <textarea id="prodDesc" class="shop-textarea" placeholder="Mô tả chi tiết acc: Rank hiện tại, số skin, thông tin đăng ký (Trắng thông tin/Facebook/Google)..."></textarea>
+            <button type="button" class="shop-btn" style="margin-top: 10px; width: 100%;" onclick="dangSanPhamMoi()">Đăng Bán Sản Phẩm Lên Shop</button>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="shop-title-section">
+            <h3><i class="fa-solid fa-fire" style="color:var(--shop-primary);"></i> Danh Sách Acc Đang Bán</h3>
+            <span style="font-size: 13px; color: var(--shop-secondary);" id="totalProductsCount">Đang cập nhật...</span>
+        </div>
+
+        <div id="productFeed" class="product-grid">
+            <div class="card" style="grid-column: 1 / -1; text-align: center; color: gray;">Đang tải danh sách tài khoản...</div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = JSON.parse(localStorage.getItem('thapcam_current_user')) || null;
+        let tempAvatarBase64 = '';
+        let tempNewAvatarBase64 = '';
+        let tempProductImageBase64 = '';
+
+        const ADMIN_USERNAME = 'hoanglong19523';
+
+        window.onload = function() {
+            if (currentUser) {
+                document.getElementById('authModal').style.display = 'none';
+                hienThiUserHeader();
+                kiemTraQuyenAdmin();
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+            }
+            layDanhSachSanPham();
+        };
+
+        function kiemTraQuyenAdmin() {
+            if (currentUser && currentUser.name === ADMIN_USERNAME) {
+                document.getElementById('adminCreateSection').style.display = 'block';
+            } else {
+                document.getElementById('adminCreateSection').style.display = 'none';
+            }
+        }
+
+        function chuyenForm(type) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'none';
+
+            if (type === 'register') {
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Tạo tài khoản mới';
+            } else if (type === 'forgot') {
+                document.getElementById('forgotForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Khôi phục mật khẩu';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Đăng nhập Shop Acc';
+            }
+        }
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarBase64 = e.target.result;
+                    document.getElementById('previewImg').src = tempAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewNewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempNewAvatarBase64 = e.target.result;
+                    document.getElementById('profileModalAvatar').src = tempNewAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewProductImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempProductImageBase64 = e.target.result;
+                    const previewImg = document.getElementById('prodImagePreviewImg');
+                    previewImg.src = tempProductImageBase64;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function xuLyDangKy() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPass').value.trim();
+            const avatar = tempAvatarBase64 || 'https://via.placeholder.com/150';
+
+            if (!name || !email || !password) {
+                alert('Vui lòng điền đầy đủ Tên, Email và Mật khẩu!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('users')
+                .insert([{ name, email, password, avatar }]);
+
+            if (error) {
+                alert('Lỗi đăng ký (Email có thể đã tồn tại): ' + error.message);
+            } else {
+                alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                chuyenForm('login');
+            }
+        }
+
+        async function xuLyDangNhap() {
+            const userInput = document.getElementById('loginUser').value.trim();
+            const passwordInput = document.getElementById('loginPass').value.trim();
+
+            if (!userInput || !passwordInput) {
+                alert('Vui lòng nhập tài khoản và mật khẩu!');
+                return;
+            }
+
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .or(`name.eq.${userInput},email.eq.${userInput}`)
+                .eq('password', passwordInput);
+
+            if (error || !data || data.length === 0) {
+                alert('Sai tên đăng nhập hoặc mật khẩu!');
+                return;
+            }
+
+            currentUser = data[0];
+            localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+            document.getElementById('authModal').style.display = 'none';
+            hienThiUserHeader();
+            kiemTraQuyenAdmin();
+            location.reload();
+        }
+
+        async function xuLyDoiMatKhauMoi() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const newPassword = document.getElementById('newPass').value.trim();
+
+            if (!email || !newPassword) {
+                alert('Vui lòng nhập đầy đủ Email và Mật khẩu mới!');
+                return;
+            }
+
+            const { data: checkUser, error: checkError } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('email', email);
+
+            if (checkError || !checkUser || checkUser.length === 0) {
+                alert('Không tìm thấy tài khoản với email này!');
+                return;
+            }
+
+            const { error: updateError } = await _supabase
+                .from('users')
+                .update({ password: newPassword })
+                .eq('email', email);
+
+            if (updateError) {
+                alert('Lỗi cập nhật mật khẩu: ' + updateError.message);
+            } else {
+                alert('Đổi mật khẩu thành công! Hãy đăng nhập lại bằng mật          <textarea id="contentInput" placeholder="Bạn đang nghĩ gì thế?"></textarea>
             <div id="selectedMediaPreview" style="font-size: 12px; color: var(--fb-secondary); margin-bottom: 5px;"></div>
             <div class="create-post-actions">
                 <div class="upload-btn-wrapper">
