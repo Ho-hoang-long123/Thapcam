@@ -20,11 +20,8 @@
         /* Navbar */
         header { background: var(--fb-card); height: 56px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         header h2 { color: var(--fb-blue); margin: 0; font-size: 24px; font-weight: bold; }
-        .user-nav-right { display: flex; align-items: center; gap: 10px; }
         .user-profile-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; background: #e4e6eb; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
         .user-profile-badge img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
-        .change-avatar-btn { background: #e4e6eb; border: none; padding: 6px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--fb-secondary); }
-        .change-avatar-btn:hover { background: #d8dadf; }
 
         .container { max-width: 600px; margin: 15px auto; padding: 0 10px; }
         .card { background: var(--fb-card); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
@@ -49,14 +46,19 @@
         .post-actions-bar { display: flex; border-top: 1px solid #e4e6eb; border-bottom: 1px solid #e4e6eb; padding: 4px 0; margin-bottom: 8px; }
         .action-option { flex: 1; background: none; border: none; color: var(--fb-secondary); font-weight: 600; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 4px; font-size: 14px; }
         .action-option:hover { background: #f2f2f2; }
+        .action-option.liked { color: var(--fb-blue); }
 
-        /* Modal Đăng nhập / Đăng ký / Quên MK */
-        #authModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        /* Modal Đăng nhập / Đăng ký / Quên MK / Đổi Avatar */
+        #authModal, #avatarModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .auth-box { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border: 1px solid #ddd; text-align: center; }
         .auth-box h3 { color: var(--fb-blue); margin-top: 0; }
         .auth-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--fb-border); border-radius: 6px; box-sizing: border-box; outline: none; font-size: 14px; }
         .avatar-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fb-blue); margin: 0 auto 10px auto; display: block; background: #ddd; }
         .switch-auth { color: var(--fb-blue); cursor: pointer; font-size: 13px; margin-top: 10px; display: block; font-weight: 600; }
+        
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .change-avatar-btn { background: #e4e6eb; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .change-avatar-btn:hover { background: #d8dadf; }
     </style>
 </head>
 <body>
@@ -79,7 +81,7 @@
             <div id="registerForm" style="display: none;">
                 <img id="previewImg" class="avatar-preview" src="https://via.placeholder.com/70" alt="Avatar">
                 <div style="margin-bottom: 8px;">
-                    <label class="fb-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px; cursor:pointer;">
+                    <label class="fb-btn" style="display:inline-block; padding: 5px 10px; font-size: 12px;">
                         Chọn ảnh đại diện <input type="file" id="regAvatarFile" accept="image/*" onchange="previewAvatar(event)" style="display:none;">
                     </label>
                 </div>
@@ -90,35 +92,48 @@
                 <span class="switch-auth" onclick="chuyenForm('login')">Đã có tài khoản? Đăng nhập</span>
             </div>
 
-            <!-- 3. FORM QUÊN MẬT KHẨU & NHẬP OTP -->
+            <!-- 3. FORM QUÊN MẬT KHẨU (GỬI & NHẬP OTP) -->
             <div id="forgotForm" style="display: none;">
-                <!-- Bước 1: Nhập email lấy mã -->
+                <!-- Bước 3.1: Nhập email gửi mã -->
                 <div id="forgotStep1">
-                    <p style="font-size: 13px; color: var(--fb-secondary);">Nhập Email tài khoản để nhận mã OTP khôi phục.</p>
+                    <p style="font-size: 13px; color: var(--fb-secondary);">Nhập Email tài khoản để nhận mã OTP khôi phục mật khẩu.</p>
                     <input type="email" id="forgotEmail" class="auth-input" placeholder="Nhập địa chỉ Email của bạn">
-                    <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="guiMaOTP()">Gửi mã OTP</button>
+                    <button class="fb-btn" style="width: 100%; padding: 10px; background: var(--fb-blue);" onclick="guiMaOtp()">Gửi mã OTP</button>
                 </div>
-                <!-- Bước 2: Nhập OTP và Mật khẩu mới -->
+
+                <!-- Bước 3.2: Nhập mã OTP và Mật khẩu mới -->
                 <div id="forgotStep2" style="display: none;">
-                    <p style="font-size: 13px; color: #42b72a;" id="otpNotice">Mã OTP đã được gửi đến email của bạn!</p>
-                    <input type="text" id="inputOtp" class="auth-input" placeholder="Nhập mã OTP gồm 6 chữ số">
+                    <p style="font-size: 13px; color: #2e7d32;">Mã OTP đã được "gửi" đến email của bạn. (Mã hiển thị giả lập trên thông báo)</p>
+                    <input type="text" id="inputOtp" class="auth-input" placeholder="Nhập mã OTP 6 chữ số">
                     <input type="password" id="newPass" class="auth-input" placeholder="Nhập mật khẩu mới">
                     <button class="fb-btn" style="width: 100%; padding: 10px; background: #fa383e;" onclick="xacNhanDoiMatKhau()">Xác nhận đổi mật khẩu</button>
                 </div>
-                <span class="switch-auth" onclick="chuyenForm('login')">Quay lại đăng nhập</span>
+
+                <span class="switch-auth" onclick="chuyenForm('login')" style="margin-top: 15px;">Quay lại đăng nhập</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Avatar -->
+    <div id="avatarModal" style="display: none;">
+        <div class="auth-box">
+            <h3>Đổi ảnh đại diện</h3>
+            <img id="previewNewAvatar" class="avatar-preview" src="" alt="New Avatar">
+            <div style="margin-bottom: 12px;">
+                <label class="fb-btn" style="display:inline-block; padding: 6px 12px; font-size: 13px;">
+                    Chọn ảnh mới <input type="file" id="newAvatarFile" accept="image/*" onchange="previewNewAvatarFunc(event)" style="display:none;">
+                </label>
+            </div>
+            <button class="fb-btn" style="width: 100%; padding: 8px; background: #42b72a; margin-bottom: 8px;" onclick="capNhatAvatar()">Lưu thay đổi</button>
+            <button class="fb-btn" style="width: 100%; padding: 8px; background: var(--fb-secondary);" onclick="dongModalAvatar()">Hủy</button>
         </div>
     </div>
 
     <!-- Header Facebook -->
     <header>
         <h2>thapcam</h2>
-        <div class="user-nav-right">
-            <!-- Nút thay đổi Avatar ẩn/hiện tùy trạng thái đăng nhập -->
-            <div id="changeAvatarWrapper" style="display: none; position: relative; overflow: hidden;" class="change-avatar-btn">
-                <i class="fa-solid fa-camera"></i> Đổi Avatar
-                <input type="file" accept="image/*" onchange="doiAvatarTrucTiep(event)" style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
-            </div>
+        <div class="header-right">
+            <button class="change-avatar-btn" onclick="moModalAvatar()"><i class="fa-solid fa-camera"></i> Đổi Avatar</button>
             <div class="user-profile-badge" onclick="dangXuat()" title="Bấm để đăng xuất">
                 <img id="headerAvatar" src="" alt="Ava">
                 <span id="headerName">Khách</span> <i class="fa-solid fa-right-from-bracket" style="font-size: 12px; color: var(--fb-secondary);"></i>
@@ -142,6 +157,245 @@
 
         <!-- Bảng tin -->
         <div id="feed">Đang tải bảng tin...</div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = JSON.parse(localStorage.getItem('thapcam_current_user')) || null;
+        let tempAvatarBase64 = '';
+        let tempNewAvatarBase64 = '';
+        let tempMediaBase64 = '';
+        
+        // Biến lưu thông tin tạm cho Quên mật khẩu OTP
+        let generatedOtp = '';
+        let resetTargetEmail = '';
+
+        window.onload = function() {
+            if (currentUser) {
+                document.getElementById('authModal').style.display = 'none';
+                hienThiUserHeader();
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+            }
+            layBaiViet();
+        };
+
+        function chuyenForm(type) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'none';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+
+            if (type === 'register') {
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Tạo tài khoản mới';
+            } else if (type === 'forgot') {
+                document.getElementById('forgotForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Khôi phục mật khẩu';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'Đăng nhập Thập Cẩm';
+            }
+        }
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarBase64 = e.target.result;
+                    document.getElementById('previewImg').src = tempAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewMedia(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempMediaBase64 = e.target.result;
+                    document.getElementById('selectedMediaPreview').innerText = "Đã chọn: " + file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- ĐĂNG KÝ TÀI KHOẢN ---
+        async function xuLyDangKy() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPass').value.trim();
+            const avatar = tempAvatarBase64 || 'https://via.placeholder.com/150';
+
+            if (!name || !email || !password) {
+                alert('Vui lòng điền đầy đủ Tên, Email và Mật khẩu!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('users')
+                .insert([{ name, email, password, avatar }]);
+
+            if (error) {
+                alert('Lỗi đăng ký (Email có thể đã tồn tại): ' + error.message);
+            } else {
+                alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                chuyenForm('login');
+            }
+        }
+
+        // --- ĐĂNG NHẬP ---
+        async function xuLyDangNhap() {
+            const userInput = document.getElementById('loginUser').value.trim();
+            const passwordInput = document.getElementById('loginPass').value.trim();
+
+            if (!userInput || !passwordInput) {
+                alert('Vui lòng nhập tài khoản và mật khẩu!');
+                return;
+            }
+
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .or(`name.eq.${userInput},email.eq.${userInput}`)
+                .eq('password', passwordInput);
+
+            if (error || !data || data.length === 0) {
+                alert('Sai tên đăng nhập hoặc mật khẩu!');
+                return;
+            }
+
+            currentUser = data[0];
+            localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+            document.getElementById('authModal').style.display = 'none';
+            hienThiUserHeader();
+            location.reload();
+        }
+
+        // --- QUÊN MẬT KHẨU QUA GỬI MÃ OTP QUA EMAIL ---
+        async function guiMaOtp() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!email) {
+                alert('Vui lòng nhập địa chỉ email của bạn!');
+                return;
+            }
+
+            // Kiểm tra email tồn tại trong CSDL
+            const { data: checkUser, error: checkError } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('email', email);
+
+            if (checkError || !checkUser || checkUser.length === 0) {
+                alert('Không tìm thấy tài khoản nào liên kết với email này!');
+                return;
+            }
+
+            resetTargetEmail = email;
+            // Tạo mã OTP ngẫu nhiên gồm 6 chữ số
+            generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Giả lập hệ thống gửi email mã OTP
+            alert(`[HỆ THỐNG EMAIL] Đã gửi mã OTP đến email: ${email}\nMã OTP xác thực của bạn là: ${generatedOtp}`);
+
+            // Chuyển sang bước nhập OTP
+            document.getElementById('forgotStep1').style.display = 'none';
+            document.getElementById('forgotStep2').style.display = 'block';
+        }
+
+        async function xacNhanDoiMatKhau() {
+            const enteredOtp = document.getElementById('inputOtp').value.trim();
+            const newPassword = document.getElementById('newPass').value.trim();
+
+            if (!enteredOtp || !newPassword) {
+                alert('Vui lòng nhập mã OTP và mật khẩu mới!');
+                return;
+            }
+
+            if (enteredOtp !== generatedOtp) {
+                alert('Mã OTP không chính xác! Vui lòng kiểm tra lại.');
+                return;
+            }
+
+            // Cập nhật mật khẩu mới vào database
+            const { error: updateError } = await _supabase
+                .from('users')
+                .update({ password: newPassword })
+                .eq('email', resetTargetEmail);
+
+            if (updateError) {
+                alert('Lỗi cập nhật mật khẩu: ' + updateError.message);
+            } else {
+                alert('Đổi mật khẩu thành công! Hãy đăng nhập lại bằng mật khẩu mới.');
+                chuyenForm('login');
+            }
+        }
+
+        // --- TÍNH NĂNG THAY ĐỔI AVATAR ---
+        function moModalAvatar() {
+            if (!currentUser) return;
+            tempNewAvatarBase64 = currentUser.avatar || '';
+            document.getElementById('previewNewAvatar').src = tempNewAvatarBase64;
+            document.getElementById('avatarModal').style.display = 'flex';
+        }
+
+        function dongModalAvatar() {
+            document.getElementById('avatarModal').style.display = 'none';
+        }
+
+        function previewNewAvatarFunc(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempNewAvatarBase64 = e.target.result;
+                    document.getElementById('previewNewAvatar').src = tempNewAvatarBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function capNhatAvatar() {
+            if (!tempNewAvatarBase64) {
+                alert('Vui lòng chọn ảnh đại diện mới!');
+                return;
+            }
+
+            // Cập nhật bảng users
+            const { error } = await _supabase
+                .from('users')
+                .update({ avatar: tempNewAvatarBase64 })
+                .eq('id', currentUser.id);
+
+            if (error) {
+                alert('Lỗi cập nhật avatar: ' + error.message);
+                return;
+            }
+
+            // Cập nhật thông tin dưới local storage
+            currentUser.avatar = tempNewAvatarBase64;
+            localStorage.setItem('thapcam_current_user', JSON.stringify(currentUser));
+
+            // Cập nhật luôn avatar các bài viết cũ của user này cho đồng bộ (tuỳ chọn)
+            await _supabase
+                .from('posts')
+                .update({ avatar: tempNewAvatarBase64 })
+                .eq('author', currentUser.name);
+
+            alert('Đổi avatar thành công!');
+            dongModalAvatar();
+            hienThiUserHeader();
+       <div id="feed">Đang tải bảng tin...</div>
     </div>
 
     <!-- Supabase SDK -->
