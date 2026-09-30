@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Game Menu</title>
+    <title>Web Game - Loading & Custom Background</title>
+    <!-- Thêm thư viện Supabase JS từ CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -14,40 +16,76 @@
 
         body {
             width: 100vw;
+            height: 100vw; /* Fix nhẹ thành 100vh chuẩn */
             height: 100vh;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            /* Phần hiển thị ảnh nền động từ Supabase */
+            background-size: cover;
+            background-position: center;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             color: #fff;
+            position: relative;
         }
 
-        /* Hiệu ứng nền động nhẹ nhàng */
-        .bg-glow {
+        /* Lớp phủ tối để chữ nổi bật hơn khi có ảnh nền */
+        .overlay {
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: rgba(138, 43, 226, 0.2);
-            filter: blur(100px);
-            border-radius: 50%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1;
-            animation: float 6s ease-in-out infinite alternate;
         }
 
-        @keyframes float {
-            0% { transform: translateY(-20px) scale(1); }
-            100% { transform: translateY(20px) scale(1.1); }
+        /* --- MÀN HÌNH LOADING --- */
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0b0919;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
         }
 
-        /* Container chính của Menu */
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid #00dbde;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #loading-text {
+            font-size: 1.2rem;
+            color: #00dbde;
+            letter-spacing: 1px;
+        }
+
+        /* --- MENU CHÍNH --- */
         .menu-container {
             position: relative;
             z-index: 2;
             text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 40px 60px;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
@@ -71,11 +109,10 @@
 
         p.subtitle {
             font-size: 1rem;
-            color: #aaa;
+            color: #ccc;
             margin-bottom: 30px;
         }
 
-        /* Danh sách nút bấm */
         .menu-buttons {
             display: flex;
             flex-direction: column;
@@ -104,50 +141,34 @@
             box-shadow: 0 6px 20px rgba(252, 0, 255, 0.4);
         }
 
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        /* Khu vực hiển thị màn hình game (Ẩn mặc định) */
-        #game-screen {
-            display: none;
+        /* --- KHU VỰC QUẢN LÝ ẢNH NỀN (XÓA ĐI SAU KHI DÙNG XONG) --- */
+        .admin-panel {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #111;
+            bottom: 20px;
+            right: 20px;
             z-index: 10;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            font-size: 0.9rem;
         }
-
-        #game-screen h2 {
-            margin-bottom: 20px;
-            color: #00dbde;
-        }
-
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 8px 15px;
-            background: #ff4757;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .back-btn:hover {
-            background: #ff6b81;
+        .admin-panel input {
+            color: #fff;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-glow"></div>
+    <!-- Màn hình Loading -->
+    <div id="loading-screen">
+        <div class="loader-spinner"></div>
+        <div id="loading-text">Đang tải tài nguyên game... 0%</div>
+    </div>
+
+    <!-- Lớp phủ nền -->
+    <div class="overlay"></div>
 
     <!-- Màn hình Menu chính -->
     <div class="menu-container" id="main-menu">
@@ -160,28 +181,86 @@
         </div>
     </div>
 
-    <!-- Màn hình Game (Sẽ bật lên khi bấm Chơi) -->
-    <div id="game-screen">
-        <button class="back-btn" onclick="returnToMenu()">⬅ Thoát</button>
-        <h2>Khu vực Game chạy ở đây</h2>
-        <canvas id="gameCanvas" width="800" height="450" style="background: #222; border: 2px solid #555; border-radius: 8px;"></canvas>
+    <!-- 
+      PHẦN NÀY DÙNG ĐỂ UPLOAD ẢNH LÊN SUPABASE.
+      SAU KHI MÀY CHỌN ẢNH XONG, NÓ SẼ LƯU LINK VÀO BROWSER (LOCALSTORAGE).
+      LÚC ĐÓ MÀY CÓ THỂ XÓA HẲN ĐOẠN <div class="admin-panel"> NÀY ĐI, NỀN VẪN GIỮ NGUYÊN!
+    -->
+    <div class="admin-panel">
+        <label>Đổi ảnh nền game (Supabase):</label><br>
+        <input type="file" id="bgInput" accept="image/*" onchange="uploadBackground(this)">
     </div>
 
     <script>
-        const mainMenu = document.getElementById('main-menu');
-        const gameScreen = document.getElementById('game-screen');
+        // --- CẤU HÌNH SUPABASE CỦA MÀY ---
+        const SUPABASE_URL = 'ĐIỀN_SUPABASE_URL_VÀO_ĐÂY';
+        const SUPABASE_ANON_KEY = 'ĐIỀN_SUPABASE_ANON_KEY_VÀO_ĐÂY';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function startGame() {
-            mainMenu.style.display = 'none';
-            gameScreen.style.display = 'flex';
+        // 1. Hiệu ứng giả lập Loading tài nguyên khi vừa vào trang
+        window.addEventListener('DOMContentLoaded', () => {
+            // Kiểm tra xem đã có ảnh nền lưu trong máy chưa, nếu có thì load luôn
+            const savedBg = localStorage.getItem('game_custom_bg');
+            if (savedBg) {
+                document.body.style.backgroundImage = `url('${savedBg}')`;
+            }
+
+            let progress = 0;
+            const loadingText = document.getElementById('loading-text');
+            const loadingScreen = document.getElementById('loading-screen');
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    // Ẩn màn hình loading mượt mà
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+                loadingText.innerText = `Đang tải tài nguyên game... ${progress}%`;
+            }, 100);
+        });
+
+        // 2. Hàm upload ảnh nền lên Supabase Storage
+        async function uploadBackground(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            alert("Đang upload ảnh lên Supabase, chờ xíu...");
+
+            const fileName = `bg_${Date.now()}_${file.name}`;
             
-            // Khởi tạo game hoặc vẽ lên canvas ở đây sau này
-            initGameCanvas();
+            // Tải lên bucket tên là 'game-assets' (nhớ tạo bucket này dạng Public trên Supabase Storage nhé)
+            const { data, error } = await supabaseClient.storage
+                .from('game-assets')
+                .upload(fileName, file);
+
+            if (error) {
+                alert("Lỗi upload: " + error.message);
+                return;
+            }
+
+            // Lấy public URL của ảnh vừa upload
+            const { data: publicURLData } = supabaseClient.storage
+                .from('game-assets')
+                .getPublicUrl(fileName);
+
+            const imageUrl = publicURLData.publicUrl;
+
+            // Đổi nền ngay lập tức
+            document.body.style.backgroundImage = `url('${imageUrl}')`;
+
+            // Lưu vào LocalStorage để lần sau vào tự nhận ảnh này luôn
+            localStorage.setItem('game_custom_bg', imageUrl);
+
+            alert("Đổi ảnh nền thành công! Giờ mày có thể xóa đoạn code .admin-panel đi được rồi.");
         }
 
-        function returnToMenu() {
-            gameScreen.style.display = 'none';
-            mainMenu.style.display = 'block';
+        function startGame() {
+            alert("Chuẩn bị chuyển vào màn hình chơi game!");
         }
 
         function openSettings() {
@@ -189,20 +268,8 @@
         }
 
         function openCredits() {
-            alert("Được làm bởi bạn với HTML/CSS/JS!");
-        }
-
-        function initGameCanvas() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Vẽ mẫu một khung hình đơn giản
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00dbde';
-            ctx.font = '24px Arial';
-            ctx.fillText("Sẵn sàng viết code game vào đây!", 200, 225);
+            alert("Được làm bởi bạn với HTML/CSS/JS & Supabase!");
         }
     </script>
 </body>
 </html>
-
