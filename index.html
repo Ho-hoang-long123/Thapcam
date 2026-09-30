@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mạng Xã Hội - Custom Login & Chat</title>
+    <title>Mạng Xã Hội - Đăng Nhập / Chat</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client CDN -->
@@ -33,7 +33,7 @@
 
             <div id="error-msg" class="text-red-400 text-sm hidden"></div>
 
-            <button type="submit" 
+            <button type="submit" id="submit-btn"
                 class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 transition font-semibold rounded-lg shadow-md">
                 Tiếp tục
             </button>
@@ -62,7 +62,7 @@
             <div id="content-home" class="space-y-4">
                 <div class="bg-white p-6 rounded-xl shadow">
                     <h2 class="text-lg font-bold mb-2">Bảng tin chung</h2>
-                    <p class="text-gray-600">Chào mừng bạn đã kết nối thành công!</p>
+                    <p class="text-gray-600">Chào mừng bạn đã kết nối thành công với cơ sở dữ liệu!</p>
                 </div>
             </div>
 
@@ -153,6 +153,7 @@
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
         const errorMsg = document.getElementById('error-msg');
+        const submitBtn = document.getElementById('submit-btn');
         const userDisplay = document.getElementById('user-display');
         const logoutBtn = document.getElementById('logout-btn');
         
@@ -164,53 +165,66 @@
         let currentChatPartnerId = null;
         let chatInterval = null;
 
-        // Giữ phiên đăng nhập bằng localStorage
         const savedUser = localStorage.getItem('current_social_user');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             loadUserData();
         }
 
-        // Đăng nhập hoặc Tự động đăng ký
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.add('hidden');
+            submitBtn.textContent = "Đang xử lý...";
+            submitBtn.disabled = true;
             
             const username = usernameInput.value.trim().toLowerCase();
             const password = passwordInput.value.trim();
 
-            if (!username || !password) return;
+            if (!username || !password) {
+                submitBtn.textContent = "Tiếp tục";
+                submitBtn.disabled = false;
+                return;
+            }
 
-            let { data: existingUser } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('username', username)
-                .maybeSingle();
-
-            if (existingUser) {
-                if (existingUser.password === password) {
-                    currentUser = existingUser;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    loadUserData();
-                } else {
-                    errorMsg.textContent = "Sai mật khẩu! Vui lòng nhập lại.";
-                    errorMsg.classList.remove('hidden');
-                }
-            } else {
-                let { data: newUser, error: insertError } = await supabaseClient
+            try {
+                let { data: users, error: selectError } = await supabaseClient
                     .from('profiles')
-                    .insert([{ username: username, password: password, avatar_url: null }])
-                    .select()
-                    .single();
+                    .select('*')
+                    .eq('username', username)
+                    .limit(1);
 
-                if (insertError) {
-                    errorMsg.textContent = "Lỗi đăng ký: " + insertError.message;
-                    errorMsg.classList.remove('hidden');
+                if (selectError) throw selectError;
+
+                if (users && users.length > 0) {
+                    let existingUser = users[0];
+                    if (existingUser.password === password) {
+                        currentUser = existingUser;
+                        localStorage.setItem('current_social_user', JSON.stringify(currentUser));
+                        loadUserData();
+                    } else {
+                        errorMsg.textContent = "Sai mật khẩu! Vui lòng nhập lại.";
+                        errorMsg.classList.remove('hidden');
+                    }
                 } else {
-                    currentUser = newUser;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    loadUserData();
+                    let { data: newUsers, error: insertError } = await supabaseClient
+                        .from('profiles')
+                        .insert([{ username: username, password: password, avatar_url: null }])
+                        .select();
+
+                    if (insertError) throw insertError;
+
+                    if (newUsers && newUsers.length > 0) {
+                        currentUser = newUsers[0];
+                        localStorage.setItem('current_social_user', JSON.stringify(currentUser));
+                        loadUserData();
+                    }
                 }
+            } catch (err) {
+                errorMsg.textContent = "Lỗi kết nối: " + (err.message || "Vui lòng thử lại");
+                errorMsg.classList.remove('hidden');
+            } finally {
+                submitBtn.textContent = "Tiếp tục";
+                submitBtn.disabled = false;
             }
         });
 
@@ -244,7 +258,6 @@
             document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
         }
 
-        // Đổi Avatar
         avatarInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -293,7 +306,6 @@
             reader.readAsDataURL(file);
         });
 
-        // Tìm kiếm người dùng
         document.getElementById('search-btn').addEventListener('click', async () => {
             const keyword = document.getElementById('search-input').value.trim().toLowerCase();
             const resultsDiv = document.getElementById('search-results');
@@ -392,16 +404,4 @@
             }
 
             friendsDiv.innerHTML = '';
-            for (let req of data) {
-                let friendId = (req.sender_id === currentUser.id) ? req.receiver_id : req.sender_id;
-
-                let { data: friendData } = await supabaseClient
-                    .from('profiles')
-                    .select('username, avatar_url')
-                    .eq('id', friendId)
-                    .single();
-
-                if (friendData) {
-                    friendsDiv.innerHTML += `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex it
+ 
