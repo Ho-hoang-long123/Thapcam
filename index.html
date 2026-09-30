@@ -16,10 +16,8 @@
 
         body {
             width: 100vw;
-            height: 100vw; /* Fix nhẹ thành 100vh chuẩn */
             height: 100vh;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            /* Phần hiển thị ảnh nền động từ Supabase */
             background-size: cover;
             background-position: center;
             display: flex;
@@ -43,13 +41,13 @@
 
         /* --- MÀN HÌNH LOADING --- */
         #loading-screen {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background: #0b0919;
-            z-index: 100;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -181,11 +179,7 @@
         </div>
     </div>
 
-    <!-- 
-      PHẦN NÀY DÙNG ĐỂ UPLOAD ẢNH LÊN SUPABASE.
-      SAU KHI MÀY CHỌN ẢNH XONG, NÓ SẼ LƯU LINK VÀO BROWSER (LOCALSTORAGE).
-      LÚC ĐÓ MÀY CÓ THỂ XÓA HẲN ĐOẠN <div class="admin-panel"> NÀY ĐI, NỀN VẪN GIỮ NGUYÊN!
-    -->
+    <!-- PHẦN UPLOAD ẢNH NỀN SUPABASE -->
     <div class="admin-panel">
         <label>Đổi ảnh nền game (Supabase):</label><br>
         <input type="file" id="bgInput" accept="image/*" onchange="uploadBackground(this)">
@@ -197,34 +191,35 @@
         const SUPABASE_ANON_KEY = 'ĐIỀN_SUPABASE_ANON_KEY_VÀO_ĐÂY';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 1. Hiệu ứng giả lập Loading tài nguyên khi vừa vào trang
-        window.addEventListener('DOMContentLoaded', () => {
-            // Kiểm tra xem đã có ảnh nền lưu trong máy chưa, nếu có thì load luôn
-            const savedBg = localStorage.getItem('game_custom_bg');
-            if (savedBg) {
-                document.body.style.backgroundImage = `url('${savedBg}')`;
-            }
+        // 1. Load ảnh nền đã lưu ngay khi khởi động
+        const savedBg = localStorage.getItem('game_custom_bg');
+        if (savedBg) {
+            document.body.style.backgroundImage = `url('${savedBg}')`;
+        }
 
+        // 2. Xử lý màn hình Loading chạy mượt mà, không bị kẹt
+        window.addEventListener('load', () => {
             let progress = 0;
             const loadingText = document.getElementById('loading-text');
             const loadingScreen = document.getElementById('loading-screen');
 
-            const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 15) + 5;
+            const loadInterval = setInterval(() => {
+                progress += Math.floor(Math.random() * 8) + 5; // Tăng ngẫu nhiên từ 5-12%
                 if (progress >= 100) {
                     progress = 100;
-                    clearInterval(interval);
-                    // Ẩn màn hình loading mượt mà
+                    clearInterval(loadInterval);
+                    
+                    // Ẩn màn hình loading
                     loadingScreen.style.opacity = '0';
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
                     }, 500);
                 }
                 loadingText.innerText = `Đang tải tài nguyên game... ${progress}%`;
-            }, 100);
+            }, 50); // Chạy nhanh hơn và mượt hơn
         });
 
-        // 2. Hàm upload ảnh nền lên Supabase Storage
+        // 3. Hàm upload ảnh nền lên Supabase Storage
         async function uploadBackground(input) {
             const file = input.files[0];
             if (!file) return;
@@ -233,7 +228,6 @@
 
             const fileName = `bg_${Date.now()}_${file.name}`;
             
-            // Tải lên bucket tên là 'game-assets' (nhớ tạo bucket này dạng Public trên Supabase Storage nhé)
             const { data, error } = await supabaseClient.storage
                 .from('game-assets')
                 .upload(fileName, file);
@@ -243,7 +237,6 @@
                 return;
             }
 
-            // Lấy public URL của ảnh vừa upload
             const { data: publicURLData } = supabaseClient.storage
                 .from('game-assets')
                 .getPublicUrl(fileName);
@@ -253,7 +246,7 @@
             // Đổi nền ngay lập tức
             document.body.style.backgroundImage = `url('${imageUrl}')`;
 
-            // Lưu vào LocalStorage để lần sau vào tự nhận ảnh này luôn
+            // Lưu vào LocalStorage
             localStorage.setItem('game_custom_bg', imageUrl);
 
             alert("Đổi ảnh nền thành công! Giờ mày có thể xóa đoạn code .admin-panel đi được rồi.");
