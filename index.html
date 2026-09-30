@@ -51,9 +51,9 @@
     </div>
 
     <script>
-        // Cấu hình kết nối Supabase của bạn
+        // Cấu hình kết nối Supabase
         const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGgmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -80,7 +80,7 @@
             const username = usernameInput.value.trim();
             const password = passwordInput.value.trim();
 
-            // Chuyển username thành email giả để tương thích với Supabase Auth
+            // Chuyển username thành dạng email giả để tương thích với cơ chế Auth của Supabase
             const fakeEmail = `${username.toLowerCase()}@customsystem.local`;
 
             // Thử đăng nhập trước
