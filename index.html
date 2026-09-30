@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mạng Xã Hội - Custom Login</title>
+    <title>Mạng Xã Hội - Custom Login & Chat</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client CDN -->
@@ -118,6 +118,29 @@
         </main>
     </div>
 
+    <!-- MODAL NHẮN TIN TRỰC TIẾP -->
+    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl flex flex-col h-[500px] overflow-hidden text-gray-900">
+            <!-- Header Chat -->
+            <div class="bg-indigo-600 text-white px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <img id="chat-partner-avatar" src="https://via.placeholder.com/150" class="w-9 h-9 rounded-full object-cover border">
+                    <h3 id="chat-partner-name" class="font-bold text-lg">Tên bạn bè</h3>
+                </div>
+                <button onclick="closeChatModal()" class="text-white hover:text-gray-200 font-bold text-xl px-2">&times;</button>
+            </div>
+            <!-- Nội dung tin nhắn -->
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
+                <p class="text-center text-gray-400 text-sm">Đang tải tin nhắn...</p>
+            </div>
+            <!-- Ô nhập gửi tin nhắn -->
+            <form id="chat-form" class="p-3 bg-white border-t flex gap-2">
+                <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700">Gửi</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
@@ -138,6 +161,8 @@
         const avatarInput = document.getElementById('avatar-input');
 
         let currentUser = null;
+        let currentChatPartnerId = null;
+        let chatInterval = null;
 
         // Giữ phiên đăng nhập bằng localStorage
         const savedUser = localStorage.getItem('current_social_user');
@@ -219,7 +244,7 @@
             document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
         }
 
-        // Đổi Avatar (có nén ảnh để không lỗi dung lượng)
+        // Đổi Avatar
         avatarInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -357,7 +382,7 @@
 
             let { data } = await supabaseClient
                 .from('friend_requests')
-                .select(`sender_id, receiver_id`)
+                .select(`id, sender_id, receiver_id`)
                 .eq('status', 'accepted')
                 .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
 
@@ -379,39 +404,4 @@
                 if (friendData) {
                     friendsDiv.innerHTML += `
                         <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex items-center space-x-3">
-                                <img src="${friendData.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                                <span class="font-semibold">${friendData.username}</span>
-                            </div>
-                            <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Bạn bè</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        async function updateRequestStatus(reqId, newStatus) {
-            let { error } = await supabaseClient
-                .from('friend_requests')
-                .update({ status: newStatus })
-                .eq('id', reqId);
-
-            if (!error) {
-                loadFriendRequests();
-                loadFriendsList();
-            }
-        }
-
-        // Đăng xuất
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('current_social_user');
-            currentUser = null;
-            dashboardContainer.classList.add('hidden');
-            authContainer.classList.remove('hidden');
-            usernameInput.value = '';
-            passwordInput.value = '';
-        });
-    </script>
-</body>
-</html>
-
+                            <div class="flex it
