@@ -48,9 +48,10 @@
                 <img id="header-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border" alt="Avatar">
                 <h1 class="text-xl font-bold text-indigo-600">Xin chào, <span id="user-display"></span>!</h1>
             </div>
-            <div class="flex space-x-3">
+            <div class="flex space-x-2 flex-wrap gap-2">
                 <button onclick="switchTab('home')" id="tab-home-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium">Bảng tin</button>
                 <button onclick="switchTab('search')" id="tab-search-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Tìm kiếm bạn bè</button>
+                <button onclick="switchTab('messages')" id="tab-messages-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Tin nhắn</button>
                 <button onclick="switchTab('settings')" id="tab-settings-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Cài đặt</button>
             </div>
         </header>
@@ -94,7 +95,54 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Cài đặt -->
+            <!-- Tab 3: Tin nhắn -->
+            <div id="content-messages" class="hidden">
+                <div class="bg-white rounded-xl shadow overflow-hidden flex" style="height: 600px;">
+                    <!-- Danh sách bạn bè bên trái -->
+                    <div class="w-1/3 border-r border-gray-200 flex flex-col">
+                        <div class="p-4 border-b border-gray-200 bg-gray-50">
+                            <h2 class="font-bold text-lg">Tin nhắn</h2>
+                            <p class="text-xs text-gray-500 mt-1">Chọn bạn bè để chat</p>
+                        </div>
+                        <div id="chat-friends-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                            <p class="text-gray-500 text-sm p-3">Đang tải danh sách bạn bè...</p>
+                        </div>
+                    </div>
+
+                    <!-- Khung chat bên phải -->
+                    <div class="w-2/3 flex flex-col">
+                        <!-- Header chat -->
+                        <div id="chat-header" class="p-4 border-b border-gray-200 bg-gray-50 flex items-center space-x-3">
+                            <img id="chat-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border hidden">
+                            <div>
+                                <h3 id="chat-username" class="font-semibold text-gray-700">Chọn một người bạn để bắt đầu chat</h3>
+                                <p id="chat-status" class="text-xs text-gray-400"></p>
+                            </div>
+                        </div>
+
+                        <!-- Nội dung tin nhắn -->
+                        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                            <div class="text-center text-gray-400 text-sm mt-20">
+                                ← Chọn bạn bè từ danh sách bên trái để nhắn tin
+                            </div>
+                        </div>
+
+                        <!-- Ô nhập tin nhắn -->
+                        <div id="chat-input-area" class="p-4 border-t border-gray-200 bg-white hidden">
+                            <div class="flex gap-2">
+                                <input type="text" id="message-input" placeholder="Nhập tin nhắn..." 
+                                    class="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    onkeypress="if(event.key === 'Enter') sendMessage()">
+                                <button onclick="sendMessage()" class="px-5 py-2 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition">
+                                    Gửi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Cài đặt -->
             <div id="content-settings" class="hidden space-y-4">
                 <div class="bg-white p-6 rounded-xl shadow max-w-md mx-auto space-y-6">
                     <h2 class="text-xl font-bold text-center">Cài đặt tài khoản</h2>
@@ -138,6 +186,8 @@
         const avatarInput = document.getElementById('avatar-input');
 
         let currentUser = null;
+        let currentChatFriend = null; // Người đang chat
+        let messagePolling = null;    // Interval để load tin nhắn mới
 
         // Giữ phiên đăng nhập bằng localStorage
         const savedUser = localStorage.getItem('current_social_user');
@@ -204,19 +254,36 @@
 
             loadFriendRequests();
             loadFriendsList();
+            loadChatFriendsList();
         }
 
         function switchTab(tabName) {
+            // Ẩn tất cả tab
             document.getElementById('content-home').classList.add('hidden');
             document.getElementById('content-search').classList.add('hidden');
+            document.getElementById('content-messages').classList.add('hidden');
             document.getElementById('content-settings').classList.add('hidden');
 
+            // Reset style nút
             document.getElementById('tab-home-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
             document.getElementById('tab-search-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
+            document.getElementById('tab-messages-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
             document.getElementById('tab-settings-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
 
+            // Hiện tab được chọn
             document.getElementById(`content-${tabName}`).classList.remove('hidden');
             document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
+
+            // Nếu vào tab tin nhắn thì load lại danh sách bạn
+            if (tabName === 'messages') {
+                loadChatFriendsList();
+            }
+
+            // Dừng polling khi rời tab tin nhắn
+            if (tabName !== 'messages' && messagePolling) {
+                clearInterval(messagePolling);
+                messagePolling = null;
+            }
         }
 
         // Đổi Avatar (có nén ảnh để không lỗi dung lượng)
@@ -336,81 +403,3 @@
                     .single();
 
                 if (senderData) {
-                    listDiv.innerHTML += `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex items-center space-x-3">
-                                <img src="${senderData.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                                <span class="font-semibold">${senderData.username} muốn kết bạn</span>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="updateRequestStatus('${req.id}', 'accepted')" class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">Đồng ý</button>
-                                <button onclick="updateRequestStatus('${req.id}', 'rejected')" class="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Xóa</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        async function loadFriendsList() {
-            const friendsDiv = document.getElementById('friends-list');
-
-            let { data } = await supabaseClient
-                .from('friend_requests')
-                .select(`sender_id, receiver_id`)
-                .eq('status', 'accepted')
-                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
-
-            if (!data || data.length === 0) {
-                friendsDiv.innerHTML = '<p class="text-gray-500 text-sm">Chưa có bạn bè nào.</p>';
-                return;
-            }
-
-            friendsDiv.innerHTML = '';
-            for (let req of data) {
-                let friendId = (req.sender_id === currentUser.id) ? req.receiver_id : req.sender_id;
-
-                let { data: friendData } = await supabaseClient
-                    .from('profiles')
-                    .select('username, avatar_url')
-                    .eq('id', friendId)
-                    .single();
-
-                if (friendData) {
-                    friendsDiv.innerHTML += `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex items-center space-x-3">
-                                <img src="${friendData.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                                <span class="font-semibold">${friendData.username}</span>
-                            </div>
-                            <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Bạn bè</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        async function updateRequestStatus(reqId, newStatus) {
-            let { error } = await supabaseClient
-                .from('friend_requests')
-                .update({ status: newStatus })
-                .eq('id', reqId);
-
-            if (!error) {
-                loadFriendRequests();
-                loadFriendsList();
-            }
-        }
-
-        // Đăng xuất
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('current_social_user');
-            currentUser = null;
-            dashboardContainer.classList.add('hidden');
-            authContainer.classList.remove('hidden');
-            usernameInput.value = '';
-            passwordInput.value = '';
-        });
-    </script>
-</body>
-</html>
