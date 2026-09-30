@@ -137,16 +137,16 @@
         const settingsAvatar = document.getElementById('settings-avatar');
         const avatarInput = document.getElementById('avatar-input');
 
-        let currentUser = null; // Lưu thông tin user hiện tại (id, username, avatar_url)
+        let currentUser = null;
 
-        // Kiểm tra xem trình duyệt đã lưu phiên đăng nhập trước đó chưa (dùng localStorage)
+        // Kiểm tra xem trình duyệt đã lưu phiên đăng nhập trước đó chưa
         const savedUser = localStorage.getItem('current_social_user');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             loadUserData();
         }
 
-        // Xử lý chung: Đăng nhập / Đăng ký tự động qua bảng `profiles`
+        // Đăng nhập hoặc Đăng ký tự động
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.add('hidden');
@@ -156,15 +156,15 @@
 
             if (!username || !password) return;
 
-            // 1. Kiểm tra xem tài khoản đã tồn tại trong database chưa
-            let { data: existingUser, error: fetchError } = await supabaseClient
+            // Kiểm tra xem tài khoản đã tồn tại chưa
+            let { data: existingUser } = await supabaseClient
                 .from('profiles')
                 .select('*')
                 .eq('username', username)
                 .maybeSingle();
 
             if (existingUser) {
-                // ĐÃ TỒN TÀI -> TIẾN HÀNH ĐĂNG NHẬP (Kiểm tra mật khẩu)
+                // Đã tồn tại -> Kiểm tra mật khẩu để đăng nhập
                 if (existingUser.password === password) {
                     currentUser = existingUser;
                     localStorage.setItem('current_social_user', JSON.stringify(currentUser));
@@ -174,7 +174,7 @@
                     errorMsg.classList.remove('hidden');
                 }
             } else {
-                // CHƯA TỒN TÀI -> TIẾN HÀNH ĐĂNG KÝ TỰ ĐỘNG
+                // Chưa tồn tại -> Đăng ký mới tự động
                 let { data: newUser, error: insertError } = await supabaseClient
                     .from('profiles')
                     .insert([{ username: username, password: password, avatar_url: null }])
@@ -222,30 +222,57 @@
             document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
         }
 
-        // Đổi Avatar từ máy và lưu trực tiếp vào database
+        // Đổi Avatar từ máy (Tự động nén dung lượng nhỏ gọn để không bị lỗi lưu)
         avatarInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = async function(uploadEvent) {
-                const base64Image = uploadEvent.target.result;
-                
-                headerAvatar.src = base64Image;
-                settingsAvatar.src = base64Image;
+            reader.onload = function(uploadEvent) {
+                const img = new Image();
+                img.src = uploadEvent.target.result;
+                img.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 200;
+                    const MAX_HEIGHT = 200;
+                    let width = img.width;
+                    let height = img.height;
 
-                let { error } = await supabaseClient
-                    .from('profiles')
-                    .update({ avatar_url: base64Image })
-                    .eq('id', currentUser.id);
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
 
-                if (!error) {
-                    currentUser.avatar_url = base64Image;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    alert("Đổi ảnh đại diện thành công!");
-                } else {
-                    alert("Lỗi lưu ảnh: " + error.message);
-                }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                    headerAvatar.src = compressedBase64;
+                    settingsAvatar.src = compressedBase64;
+
+                    let { error } = await supabaseClient
+                        .from('profiles')
+                        .update({ avatar_url: compressedBase64 })
+                        .eq('id', currentUser.id);
+
+                    if (!error) {
+                        currentUser.avatar_url = compressedBase64;
+                        localStorage.setItem('current_social_user', JSON.stringify(currentUser));
+                        alert("Đổi ảnh đại diện thành công!");
+                    } else {
+                        alert("Lỗi lưu ảnh: " + error.message);
+                    }
+                };
             };
             reader.readAsDataURL(file);
         });
@@ -390,9 +417,4 @@
             currentUser = null;
             dashboardContainer.classList.add('hidden');
             authContainer.classList.remove('hidden');
-            usernameInput.value = '';
-            passwordInput.value = '';
-        });
-    </script>
-</body>
-</html>
+            usernameInput.value = '
