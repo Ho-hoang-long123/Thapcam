@@ -1,416 +1,1286 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mạng Xã Hội - Custom Login</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MN Social</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0}
+.icon{
+    width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    transition:.2s;
+}
+.icon:hover{transform:scale(1.05)}
+.chat-in{
+    background:#4f46e5;
+    color:white;
+    border-radius:18px 18px 4px 18px;
+}
+.chat-out{
+    background:#e5e7eb;
+    color:#111827;
+    border-radius:18px 18px 18px 4px;
+}
+</style>
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
 
-    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
-    <div id="auth-container" class="bg-gray-800 p-8 rounded-2xl shadow-xl w-96 border border-gray-700">
-        <h2 class="text-2xl font-bold mb-2 text-center text-indigo-400">Đăng nhập / Đăng ký</h2>
-        <p class="text-sm text-gray-400 text-center mb-6">Nhập tên tài khoản và mật khẩu bất kỳ</p>
-        
-        <form id="auth-form" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Tên tài khoản</label>
-                <input type="text" id="username" required 
-                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
-                    placeholder="Ví dụ: player123">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
-                <input type="password" id="password" required 
-                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
-                    placeholder="••••••••">
-            </div>
+<body class="bg-gray-900 text-white">
 
-            <div id="error-msg" class="text-red-400 text-sm hidden"></div>
+<!-- ================= LOGIN ================= -->
 
-            <button type="submit" 
-                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 transition font-semibold rounded-lg shadow-md">
-                Tiếp tục
-            </button>
-        </form>
-    </div>
+<div id="auth-container"
+class="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-700 mx-auto mt-20">
 
-    <!-- TRANG CHỦ -->
-    <div id="dashboard-container" class="hidden bg-gray-100 text-gray-900 w-full min-h-screen flex flex-col">
-        <!-- Thanh Header -->
-        <header class="bg-white shadow px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <img id="header-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border" alt="Avatar">
-                <h1 class="text-xl font-bold text-indigo-600">Xin chào, <span id="user-display"></span>!</h1>
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="switchTab('home')" id="tab-home-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium">Bảng tin</button>
-                <button onclick="switchTab('search')" id="tab-search-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Tìm kiếm bạn bè</button>
-                <button onclick="switchTab('settings')" id="tab-settings-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Cài đặt</button>
-            </div>
-        </header>
+<h2 class="text-2xl font-bold mb-2 text-center text-indigo-400">
+Đăng nhập / Đăng ký
+</h2>
 
-        <!-- Nội dung chính -->
-        <main class="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
-            
-            <!-- Tab 1: Bảng tin -->
-            <div id="content-home" class="space-y-4">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-2">Bảng tin chung</h2>
-                    <p class="text-gray-600">Chào mừng bạn đã kết nối thành công!</p>
-                </div>
-            </div>
+<p class="text-sm text-gray-400 text-center mb-6">
+Nhập tên tài khoản và mật khẩu bất kỳ
+</p>
 
-            <!-- Tab 2: Tìm kiếm bạn bè -->
-            <div id="content-search" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-4">Tìm kiếm người dùng</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="search-input" placeholder="Nhập tên tài khoản..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button id="search-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Tìm</button>
-                    </div>
-                    <div id="search-results" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Nhập tên và bấm tìm kiếm để kết bạn.</p>
-                    </div>
-                </div>
+<form id="auth-form" class="space-y-4">
 
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-4">Lời mời kết bạn đang chờ</h2>
-                    <div id="requests-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Không có lời mời nào.</p>
-                    </div>
-                </div>
+<div>
+<label class="block text-sm mb-1">Tên tài khoản</label>
+<input
+id="username"
+required
+autocomplete="username"
+class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+placeholder="Ví dụ: player123">
+</div>
 
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-4">Danh sách bạn bè của bạn</h2>
-                    <div id="friends-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Chưa có bạn bè nào.</p>
-                    </div>
-                </div>
-            </div>
+<div>
+<label class="block text-sm mb-1">Mật khẩu</label>
+<input
+id="password"
+type="password"
+required
+autocomplete="current-password"
+class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+placeholder="••••••••">
+</div>
 
-            <!-- Tab 3: Cài đặt -->
-            <div id="content-settings" class="hidden space-y-4">
-                <div class="bg-white p-6 rounded-xl shadow max-w-md mx-auto space-y-6">
-                    <h2 class="text-xl font-bold text-center">Cài đặt tài khoản</h2>
-                    
-                    <div class="flex flex-col items-center space-y-3">
-                        <img id="settings-avatar" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 shadow" alt="Avatar">
-                        <label class="cursor-pointer bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition">
-                            Đổi ảnh đại diện từ máy
-                            <input type="file" id="avatar-input" accept="image/*" class="hidden">
-                        </label>
-                    </div>
+<div id="error-msg"
+class="text-red-400 text-sm hidden"></div>
 
-                    <hr class="border-gray-200">
+<button
+class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold">
+Tiếp tục
+</button>
 
-                    <button id="logout-btn" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition">
-                        Đăng xuất tài khoản
-                    </button>
-                </div>
-            </div>
+</form>
+</div>
 
-        </main>
-    </div>
 
-    <script>
-        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!-- ================= APP ================= -->
 
-        const authContainer = document.getElementById('auth-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const authForm = document.getElementById('auth-form');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const errorMsg = document.getElementById('error-msg');
-        const userDisplay = document.getElementById('user-display');
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        const headerAvatar = document.getElementById('header-avatar');
-        const settingsAvatar = document.getElementById('settings-avatar');
-        const avatarInput = document.getElementById('avatar-input');
+<div id="dashboard-container"
+class="hidden min-h-screen bg-gray-100 text-gray-900">
 
-        let currentUser = null;
+<header class="bg-white shadow px-4 py-3 flex justify-between items-center">
 
-        // Giữ phiên đăng nhập bằng localStorage
-        const savedUser = localStorage.getItem('current_social_user');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            loadUserData();
-        }
+<div class="flex items-center gap-3">
 
-        // Đăng nhập hoặc Tự động đăng ký
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorMsg.classList.add('hidden');
-            
-            const username = usernameInput.value.trim().toLowerCase();
-            const password = passwordInput.value.trim();
+<img
+id="header-avatar"
+src="https://via.placeholder.com/150"
+class="w-10 h-10 rounded-full object-cover border">
 
-            if (!username || !password) return;
+<div>
+<div class="text-xs text-gray-400">Xin chào</div>
+<div id="user-display"
+class="font-bold text-indigo-600"></div>
+</div>
 
-            let { data: existingUser } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('username', username)
-                .maybeSingle();
+</div>
 
-            if (existingUser) {
-                if (existingUser.password === password) {
-                    currentUser = existingUser;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    loadUserData();
-                } else {
-                    errorMsg.textContent = "Sai mật khẩu! Vui lòng nhập lại.";
-                    errorMsg.classList.remove('hidden');
-                }
-            } else {
-                let { data: newUser, error: insertError } = await supabaseClient
-                    .from('profiles')
-                    .insert([{ username: username, password: password, avatar_url: null }])
-                    .select()
-                    .single();
 
-                if (insertError) {
-                    errorMsg.textContent = "Lỗi đăng ký: " + insertError.message;
-                    errorMsg.classList.remove('hidden');
-                } else {
-                    currentUser = newUser;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    loadUserData();
-                }
-            }
-        });
+<div class="flex gap-2">
 
-        function loadUserData() {
-            authContainer.classList.add('hidden');
-            dashboardContainer.classList.remove('hidden');
+<!-- HOME -->
+<button
+id="tab-home-btn"
+onclick="switchTab('home')"
+class="icon bg-indigo-600 text-white"
+title="Trang chủ">
 
-            userDisplay.textContent = currentUser.username;
-            if (currentUser.avatar_url) {
-                headerAvatar.src = currentUser.avatar_url;
-                settingsAvatar.src = currentUser.avatar_url;
-            } else {
-                headerAvatar.src = 'https://via.placeholder.com/150';
-                settingsAvatar.src = 'https://via.placeholder.com/150';
-            }
+<svg width="21" height="21" fill="none"
+stroke="currentColor" stroke-width="2"
+viewBox="0 0 24 24">
+<path d="M3 10.5L12 3l9 7.5"/>
+<path d="M5 9v11h14V9"/>
+<path d="M9 20v-6h6v6"/>
+</svg>
 
-            loadFriendRequests();
-            loadFriendsList();
-        }
+</button>
 
-        function switchTab(tabName) {
-            document.getElementById('content-home').classList.add('hidden');
-            document.getElementById('content-search').classList.add('hidden');
-            document.getElementById('content-settings').classList.add('hidden');
 
-            document.getElementById('tab-home-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
-            document.getElementById('tab-search-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
-            document.getElementById('tab-settings-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
+<!-- FRIENDS -->
+<button
+id="tab-search-btn"
+onclick="switchTab('search')"
+class="icon bg-gray-200 text-gray-700"
+title="Bạn bè">
 
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
-        }
+<svg width="21" height="21"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24">
 
-        // Đổi Avatar (có nén ảnh để không lỗi dung lượng)
-        avatarInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+<circle cx="9" cy="7" r="4"/>
+<path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"/>
 
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                const img = new Image();
-                img.src = uploadEvent.target.result;
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 200;
-                    const MAX_HEIGHT = 200;
-                    let width = img.width;
-                    let height = img.height;
+</svg>
 
-                    if (width > height) {
-                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    } else {
-                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                    }
+</button>
 
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
 
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+<!-- SETTINGS -->
+<button
+id="tab-settings-btn"
+onclick="switchTab('settings')"
+class="icon bg-gray-200 text-gray-700"
+title="Cài đặt">
 
-                    headerAvatar.src = compressedBase64;
-                    settingsAvatar.src = compressedBase64;
+<svg width="21" height="21"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24">
 
-                    let { error } = await supabaseClient
-                        .from('profiles')
-                        .update({ avatar_url: compressedBase64 })
-                        .eq('id', currentUser.id);
+<circle cx="12" cy="12" r="3"/>
+<path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 1.7-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.55V20h-2.4v-.21a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06-1.7-1.7.06-.06A1.7 1.7 0 0 0 8.6 15a1.7 1.7 0 0 0-1.55-1H6.8v-2.4h.25a1.7 1.7 0 0 0 1.55-1A1.7 1.7 0 0 0 8.26 8.7l-.06-.06 1.7-1.7.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1-1.55V5h2.4v.21a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.7 1.7-.06.06a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.55 1h.21V14h-.21a1.7 1.7 0 0 0-1.55 1z"/>
 
-                    if (!error) {
-                        currentUser.avatar_url = compressedBase64;
-                        localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                        alert("Đổi ảnh đại diện thành công!");
-                    } else {
-                        alert("Lỗi lưu ảnh: " + error.message);
-                    }
-                };
-            };
-            reader.readAsDataURL(file);
-        });
+</svg>
 
-        // Tìm kiếm người dùng
-        document.getElementById('search-btn').addEventListener('click', async () => {
-            const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-            const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = 'Đang tìm kiếm...';
+</button>
 
-            if (!keyword) return;
+</div>
+</header>
 
-            let { data } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .ilike('username', `%${keyword}%`)
-                .neq('id', currentUser.id);
 
-            if (!data || data.length === 0) {
-                resultsDiv.innerHTML = '<p class="text-gray-500 text-sm">Không tìm thấy người dùng nào.</p>';
-                return;
-            }
+<main class="max-w-4xl mx-auto p-4 md:p-6">
 
-            resultsDiv.innerHTML = '';
-            data.forEach(user => {
-                resultsDiv.innerHTML += `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                        <div class="flex items-center space-x-3">
-                            <img src="${user.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                            <span class="font-semibold">${user.username}</span>
-                        </div>
-                        <button onclick="sendFriendRequest('${user.id}')" class="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Kết bạn</button>
-                    </div>
-                `;
-            });
-        });
 
-        async function sendFriendRequest(receiverId) {
-            let { error } = await supabaseClient
-                .from('friend_requests')
-                .insert([{ sender_id: currentUser.id, receiver_id: receiverId, status: 'pending' }]);
+<!-- ================= HOME ================= -->
 
-            if (error) {
-                alert("Đã gửi lời mời trước đó hoặc có lỗi xảy ra!");
-            } else {
-                alert("Đã gửi lời mời kết bạn thành công!");
-            }
-        }
+<section id="content-home">
 
-        async function loadFriendRequests() {
-            const listDiv = document.getElementById('requests-list');
-            
-            let { data } = await supabaseClient
-                .from('friend_requests')
-                .select(`id, sender_id`)
-                .eq('receiver_id', currentUser.id)
-                .eq('status', 'pending');
+<div class="bg-white rounded-xl shadow p-6">
 
-            if (!data || data.length === 0) {
-                listDiv.innerHTML = '<p class="text-gray-500 text-sm">Không có lời mời kết bạn nào.</p>';
-                return;
-            }
+<h2 class="text-xl font-bold">
+🏠 Bảng tin
+</h2>
 
-            listDiv.innerHTML = '';
-            for (let req of data) {
-                let { data: senderData } = await supabaseClient
-                    .from('profiles')
-                    .select('username, avatar_url')
-                    .eq('id', req.sender_id)
-                    .single();
+<p class="text-gray-500 mt-2">
+Chào mừng <b id="home-name"></b>!
+</p>
 
-                if (senderData) {
-                    listDiv.innerHTML += `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex items-center space-x-3">
-                                <img src="${senderData.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                                <span class="font-semibold">${senderData.username} muốn kết bạn</span>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="updateRequestStatus('${req.id}', 'accepted')" class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">Đồng ý</button>
-                                <button onclick="updateRequestStatus('${req.id}', 'rejected')" class="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Xóa</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        }
+<p class="text-gray-400 text-sm mt-3">
+Kết bạn với mọi người để bắt đầu trò chuyện.
+</p>
 
-        async function loadFriendsList() {
-            const friendsDiv = document.getElementById('friends-list');
+</div>
 
-            let { data } = await supabaseClient
-                .from('friend_requests')
-                .select(`sender_id, receiver_id`)
-                .eq('status', 'accepted')
-                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+</section>
 
-            if (!data || data.length === 0) {
-                friendsDiv.innerHTML = '<p class="text-gray-500 text-sm">Chưa có bạn bè nào.</p>';
-                return;
-            }
 
-            friendsDiv.innerHTML = '';
-            for (let req of data) {
-                let friendId = (req.sender_id === currentUser.id) ? req.receiver_id : req.sender_id;
+<!-- ================= FRIENDS ================= -->
 
-                let { data: friendData } = await supabaseClient
-                    .from('profiles')
-                    .select('username, avatar_url')
-                    .eq('id', friendId)
-                    .single();
+<section
+id="content-search"
+class="hidden space-y-5">
 
-                if (friendData) {
-                    friendsDiv.innerHTML += `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex items-center space-x-3">
-                                <img src="${friendData.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                                <span class="font-semibold">${friendData.username}</span>
-                            </div>
-                            <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Bạn bè</span>
-                        </div>
-                    `;
-                }
-            }
-        }
 
-        async function updateRequestStatus(reqId, newStatus) {
-            let { error } = await supabaseClient
-                .from('friend_requests')
-                .update({ status: newStatus })
-                .eq('id', reqId);
+<!-- SEARCH -->
 
-            if (!error) {
-                loadFriendRequests();
-                loadFriendsList();
-            }
-        }
+<div class="bg-white rounded-xl shadow p-5">
 
-        // Đăng xuất
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('current_social_user');
-            currentUser = null;
-            dashboardContainer.classList.add('hidden');
-            authContainer.classList.remove('hidden');
-            usernameInput.value = '';
-            passwordInput.value = '';
-        });
-    </script>
-</body>
-</html>
+<h2 class="font-bold text-lg mb-4">
+🔎 Tìm người dùng
+</h2>
+
+<div class="flex gap-2">
+
+<input
+id="search-input"
+class="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+placeholder="Nhập tên tài khoản...">
+
+<button
+id="search-btn"
+class="icon bg-indigo-600 text-white"
+title="Tìm kiếm">
+
+<svg width="20" height="20"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24">
+
+<circle cx="11" cy="11" r="7"/>
+<path d="m20 20-4-4"/>
+
+</svg>
+
+</button>
+
+</div>
+
+<div
+id="search-results"
+class="space-y-3 mt-4">
+</div>
+
+</div>
+
+
+<!-- REQUEST -->
+
+<div class="bg-white rounded-xl shadow p-5">
+
+<h2 class="font-bold text-lg mb-4">
+👋 Lời mời kết bạn
+</h2>
+
+<div id="requests-list"></div>
+
+</div>
+
+
+<!-- FRIENDS -->
+
+<div class="bg-white rounded-xl shadow p-5">
+
+<h2 class="font-bold text-lg mb-4">
+👥 Bạn bè
+</h2>
+
+<div id="friends-list"></div>
+
+</div>
+
+</section>
+
+
+<!-- ================= SETTINGS ================= -->
+
+<section
+id="content-settings"
+class="hidden">
+
+<div class="bg-white rounded-xl shadow p-6 max-w-md mx-auto">
+
+<h2 class="text-xl font-bold text-center mb-6">
+⚙️ Cài đặt
+</h2>
+
+<div class="flex flex-col items-center gap-3">
+
+<img
+id="settings-avatar"
+src="https://via.placeholder.com/150"
+class="w-24 h-24 rounded-full object-cover border-2 border-indigo-500">
+
+<label
+class="cursor-pointer bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl">
+
+Đổi ảnh đại diện
+
+<input
+id="avatar-input"
+type="file"
+accept="image/*"
+class="hidden">
+
+</label>
+
+</div>
+
+<hr class="my-6">
+
+<button
+id="logout-btn"
+class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold">
+
+Đăng xuất
+
+</button>
+
+</div>
+
+</section>
+
+</main>
+</div>
+
+
+<!-- ================= CHAT ================= -->
+
+<div
+id="chat-modal"
+class="hidden fixed inset-0 z-50 bg-black/60 p-3 flex items-center justify-center">
+
+<div
+class="bg-white w-full max-w-lg h-[650px] max-h-[92vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+
+
+<!-- CHAT HEADER -->
+
+<div class="bg-indigo-600 text-white p-4 flex justify-between items-center">
+
+<div class="flex items-center gap-3">
+
+<img
+id="chat-avatar"
+src="https://via.placeholder.com/150"
+class="w-10 h-10 rounded-full object-cover border-2 border-white">
+
+<div>
+<div id="chat-name" class="font-bold"></div>
+<div class="text-xs text-indigo-200">
+Đang trò chuyện
+</div>
+</div>
+
+</div>
+
+
+<button
+onclick="closeChat()"
+class="w-10 h-10 rounded-full hover:bg-indigo-500 flex items-center justify-center"
+title="Đóng">
+
+<svg width="23" height="23"
+fill="none"
+stroke="currentColor"
+stroke-width="2.5"
+viewBox="0 0 24 24">
+
+<path d="M6 6l12 12"/>
+<path d="M18 6L6 18"/>
+
+</svg>
+
+</button>
+
+</div>
+
+
+<!-- MESSAGES -->
+
+<div
+id="messages-container"
+class="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50">
+
+</div>
+
+
+<!-- SEND -->
+
+<form
+id="message-form"
+class="p-3 border-t flex gap-2">
+
+<input
+id="message-input"
+autocomplete="off"
+class="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
+placeholder="Nhập tin nhắn...">
+
+<button
+class="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center"
+title="Gửi">
+
+<svg width="21" height="21"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24">
+
+<path d="M22 2L11 13"/>
+<path d="M22 2l-7 20-4-9-9-4z"/>
+
+</svg>
+
+</button>
+
+</form>
+
+</div>
+</div>
+
+
+<script>
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+const SUPABASE_URL =
+'https://qcgwmdsreduajcruktgm.supabase.co';
+
+const SUPABASE_ANON_KEY =
+'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+
+const supabaseClient =
+supabase.createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+);
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentUser = null;
+let currentChatUser = null;
+let chatTimer = null;
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const authContainer =
+document.getElementById('auth-container');
+
+const dashboardContainer =
+document.getElementById('dashboard-container');
+
+const authForm =
+document.getElementById('auth-form');
+
+const usernameInput =
+document.getElementById('username');
+
+const passwordInput =
+document.getElementById('password');
+
+const errorMsg =
+document.getElementById('error-msg');
+
+const userDisplay =
+document.getElementById('user-display');
+
+const homeName =
+document.getElementById('home-name');
+
+const headerAvatar =
+document.getElementById('header-avatar');
+
+const settingsAvatar =
+document.getElementById('settings-avatar');
+
+const avatarInput =
+document.getElementById('avatar-input');
+
+const logoutBtn =
+document.getElementById('logout-btn');
+
+const chatModal =
+document.getElementById('chat-modal');
+
+const chatName =
+document.getElementById('chat-name');
+
+const chatAvatar =
+document.getElementById('chat-avatar');
+
+const messagesContainer =
+document.getElementById('messages-container');
+
+const messageInput =
+document.getElementById('message-input');
+
+
+/* =========================================================
+   HELPER
+========================================================= */
+
+function getAvatar(url){
+
+return url ||
+'https://via.placeholder.com/150';
+
+}
+
+
+function escapeHTML(text){
+
+return String(text || '')
+.replace(/&/g,'&amp;')
+.replace(/</g,'&lt;')
+.replace(/>/g,'&gt;')
+.replace(/"/g,'&quot;')
+.replace(/'/g,'&#039;');
+
+}
+
+
+/* =========================================================
+   AUTO LOGIN
+========================================================= */
+
+const savedUser =
+localStorage.getItem('current_social_user');
+
+if(savedUser){
+
+try{
+
+currentUser =
+JSON.parse(savedUser);
+
+loadUserData();
+
+}catch(e){
+
+localStorage.removeItem(
+'current_social_user'
+);
+
+}
+
+}
+
+
+/* =========================================================
+   LOGIN / REGISTER
+========================================================= */
+
+authForm.addEventListener(
+'submit',
+async function(e){
+
+e.preventDefault();
+
+errorMsg.classList.add('hidden');
+
+const username =
+usernameInput.value
+.trim()
+.toLowerCase();
+
+const password =
+passwordInput.value.trim();
+
+if(!username || !password)
+return;
+
+
+const {data:existingUser,error} =
+await supabaseClient
+.from('profiles')
+.select('*')
+.eq('username',username)
+.maybeSingle();
+
+
+if(error){
+
+errorMsg.textContent =
+error.message;
+
+errorMsg.classList.remove('hidden');
+
+return;
+
+}
+
+
+/* USER EXISTS */
+
+if(existingUser){
+
+if(existingUser.password !== password){
+
+errorMsg.textContent =
+'Sai mật khẩu!';
+
+errorMsg.classList.remove('hidden');
+
+return;
+
+}
+
+currentUser =
+existingUser;
+
+}
+/* REGISTER */
+
+else{
+
+const {data:newUser,error:insertError} =
+await supabaseClient
+.from('profiles')
+.insert([{
+username:username,
+password:password,
+avatar_url:null
+}])
+.select()
+.single();
+
+
+if(insertError){
+
+errorMsg.textContent =
+insertError.message;
+
+errorMsg.classList.remove('hidden');
+
+return;
+
+}
+
+currentUser =
+newUser;
+
+}
+
+
+localStorage.setItem(
+'current_social_user',
+JSON.stringify(currentUser)
+);
+
+loadUserData();
+
+}
+);
+
+
+/* =========================================================
+   LOAD USER
+========================================================= */
+
+function loadUserData(){
+
+authContainer.classList.add('hidden');
+
+dashboardContainer.classList.remove('hidden');
+
+userDisplay.textContent =
+currentUser.username;
+
+homeName.textContent =
+currentUser.username;
+
+headerAvatar.src =
+getAvatar(currentUser.avatar_url);
+
+settingsAvatar.src =
+getAvatar(currentUser.avatar_url);
+
+loadFriendRequests();
+
+loadFriendsList();
+
+}
+
+
+/* =========================================================
+   TAB
+========================================================= */
+
+function switchTab(tab){
+
+const tabs=[
+'home',
+'search',
+'settings'
+];
+
+tabs.forEach(t=>{
+
+document
+.getElementById('content-'+t)
+.classList.add('hidden');
+
+document
+.getElementById('tab-'+t+'-btn')
+.className=
+'icon bg-gray-200 text-gray-700';
+
+});
+
+
+document
+.getElementById('content-'+tab)
+.classList.remove('hidden');
+
+document
+.getElementById('tab-'+tab+'-btn')
+.className=
+'icon bg-indigo-600 text-white';
+
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+document
+.getElementById('search-btn')
+.addEventListener(
+'click',
+searchUsers
+);
+
+
+document
+.getElementById('search-input')
+.addEventListener(
+'keydown',
+e=>{
+
+if(e.key==='Enter')
+searchUsers();
+
+}
+);
+
+
+async function searchUsers(){
+
+const keyword =
+document
+.getElementById('search-input')
+.value
+.trim()
+.toLowerCase();
+
+const result =
+document.getElementById('search-results');
+
+if(!keyword){
+
+result.innerHTML=
+'<p class="text-gray-400 text-sm">Nhập tên người dùng.</p>';
+
+return;
+
+}
+
+result.innerHTML=
+'<p class="text-gray-400">Đang tìm...</p>';
+
+
+const {data,error} =
+await supabaseClient
+.from('profiles')
+.select('*')
+.ilike(
+'username',
+`%${keyword}%`
+)
+.neq(
+'id',
+currentUser.id
+);
+
+
+if(error){
+
+result.innerHTML=
+`<p class="text-red-500">${escapeHTML(error.message)}</p>`;
+
+return;
+
+}
+
+
+if(!data || data.length===0){
+
+result.innerHTML=
+'<p class="text-gray-500">Không tìm thấy người dùng.</p>';
+
+return;
+
+}
+
+
+result.innerHTML='';
+
+
+for(const user of data){
+
+const relation =
+await getFriendRelation(user.id);
+
+let action='';
+
+if(relation === 'friend'){
+
+action=`
+
+<button
+onclick="openChat('${user.id}')"
+class="icon bg-indigo-600 text-white"
+title="Nhắn tin">
+
+💬
+
+</button>
+
+<button
+onclick="removeFriend('${user.id}')"
+class="icon bg-red-100 text-red-600"
+title="Xóa bạn">
+
+🗑️
+
+</button>
+
+`;
+
+}
+
+else if(relation === 'sent'){
+
+action=`
+
+<span
+class="text-xs bg-gray-100 text-gray-500 px-3 py-2 rounded-lg">
+
+⏳ Đã gửi
+
+</span>
+
+`;
+
+}
+
+else if(relation === 'received'){
+
+action=`
+
+<button
+onclick="acceptRequestByUser('${user.id}')"
+class="icon bg-green-600 text-white"
+title="Đồng ý">
+
+✓
+
+</button>
+
+`;
+
+}
+
+else{
+
+action=`
+
+<button
+onclick="sendFriendRequest('${user.id}')"
+class="icon bg-indigo-600 text-white"
+title="Kết bạn">
+
+➕
+
+</button>
+
+`;
+
+}
+
+
+result.innerHTML += `
+
+<div class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
+
+<div class="flex items-center gap-3">
+
+<img
+src="${getAvatar(user.avatar_url)}"
+class="w-11 h-11 rounded-full object-cover border">
+
+<div>
+<div class="font-semibold">
+${escapeHTML(user.username)}
+</div>
+
+${
+relation==='friend'
+?
+'<div class="text-xs text-green-600">Bạn bè</div>'
+:
+''
+}
+
+</div>
+
+</div>
+
+<div class="flex gap-2">
+${action}
+</div>
+
+</div>
+
+`;
+
+}
+
+}
+
+
+/* =========================================================
+   GET RELATION
+========================================================= */
+
+async function getFriendRelation(userId){
+
+const {data} =
+await supabaseClient
+.from('friend_requests')
+.select('id,sender_id,receiver_id,status')
+.or(
+`and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`
+)
+.limit(1)
+.maybeSingle();
+
+
+if(!data)
+return 'none';
+
+
+if(data.status==='accepted')
+return 'friend';
+
+if(
+data.status==='pending' &&
+data.sender_id===currentUser.id
+)
+return 'sent';
+
+if(
+data.status==='pending' &&
+data.receiver_id===currentUser.id
+)
+return 'received';
+
+return 'none';
+
+}
+
+
+/* =========================================================
+   SEND FRIEND REQUEST
+========================================================= */
+
+async function sendFriendRequest(receiverId){
+
+const relation =
+await getFriendRelation(receiverId);
+
+if(relation !== 'none'){
+
+alert('Hai người đã có quan hệ kết bạn.');
+
+return;
+
+}
+
+
+const {error} =
+await supabaseClient
+.from('friend_requests')
+.insert([{
+sender_id:currentUser.id,
+receiver_id:receiverId,
+status:'pending'
+}]);
+
+
+if(error){
+
+alert('Không thể gửi lời mời: '+error.message);
+
+return;
+
+}
+
+
+alert('Đã gửi lời mời kết bạn!');
+
+searchUsers();
+
+}
+
+
+/* =========================================================
+   LOAD REQUESTS
+========================================================= */
+
+async function loadFriendRequests(){
+
+const box =
+document.getElementById('requests-list');
+
+const {data,error} =
+await supabaseClient
+.from('friend_requests')
+.select('id,sender_id')
+.eq(
+'receiver_id',
+currentUser.id
+)
+.eq(
+'status',
+'pending'
+);
+
+
+if(error){
+
+box.innerHTML=
+`<p class="text-red-500">${escapeHTML(error.message)}</p>`;
+
+return;
+
+}
+
+
+if(!data || data.length===0){
+
+box.innerHTML=
+'<p class="text-gray-500 text-sm">Không có lời mời.</p>';
+
+return;
+
+}
+
+
+box.innerHTML='';
+
+
+for(const req of data){
+
+const {data:user} =
+await supabaseClient
+.from('profiles')
+.select('username,avatar_url')
+.eq('id',req.sender_id)
+.single();
+
+
+if(!user)
+continue;
+
+
+box.innerHTML += `
+
+<div class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
+
+<div class="flex items-center gap-3">
+
+<img
+src="${getAvatar(user.avatar_url)}"
+class="w-11 h-11 rounded-full object-cover border">
+
+<div>
+<div class="font-semibold">
+${escapeHTML(user.username)}
+</div>
+
+<div class="text-xs text-gray-400">
+Muốn kết bạn với bạn
+</div>
+
+</div>
+
+</div>
+
+<div class="flex gap-2">
+
+<button
+onclick="updateRequest('${req.id}','accepted')"
+class="icon bg-green-100 text-green-600"
+title="Đồng ý">
+
+✓
+
+</button>
+
+<button
+onclick="updateRequest('${req.id}','rejected')"
+class="icon bg-red-100 text-red-600"
+title="Từ chối">
+
+✕
+
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+}
+
+
+/* =========================================================
+   ACCEPT FROM SEARCH
+========================================================= */
+
+async function acceptRequestByUser(senderId){
+
+const {data:req} =
+await supabaseClient
+.from('friend_requests')
+.select('id')
+.eq('sender_id',senderId)
+.eq('receiver_id',currentUser.id)
+.eq('status','pending')
+.maybeSingle();
+
+
+if(req){
+
+await updateRequest(
+req.id,
+'accepted'
+);
+
+}
+
+}
+
+
+/* =========================================================
+   UPDATE REQUEST
+========================================================= */
+
+async function updateRequest(
+requestId,
+status
+){
+
+const {error} =
+await supabaseClient
+.from('friend_requests')
+.update({
+status:status
+})
+.eq(
+'id',
+requestId
+);
+
+
+if(error){
+
+alert(error.message);
+
+return;
+
+}
+
+
+loadFriendRequests();
+
+loadFriendsList();
+
+}
+
+
+/* =========================================================
+   LOAD FRIENDS
+========================================================= */
+
+async function loadFriendsList(){
+
+const box =
+document.getElementById('friends-list');
+
+
+const {data,error} =
+await supabaseClient
+.from('friend_requests')
+.select('id,sender_id,receiver_id')
+.eq('status','accepted')
+.or(
+`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
+);
+
+
+if(error){
+
+box.innerHTML=
+`<p class="text-red-500">${escapeHTML(error.message)}</p>`;
+
+return;
+
+}
+
+
+if(!data || data.length===0){
+
+box.innerHTML=
+'<p class="text-gray-500 text-sm">Chưa có bạn bè.</p>';
+
+return;
+
+}
+
+
+box.innerHTML='';
+
+
+for(const friendship of data){
+
+const friendId =
+friendship.sender_id === currentUser.id
+?
+friendship.receiver_id
+:
+friendship.sender_id;
+
+
+const {data:friend} =
+await supabaseClient
+.from('profiles')
+.select('id,username,avatar_url')
+.eq('id',friendId)
+.single();
+
+
+if(!friend)
+continue;
+
+
+box.innerHTML += `
+
+<div
+class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
+
+<div class="flex items-center gap-3">
+
+<img
+src="${getAvatar(friend.avatar_url)}"
+class="w-11 h-11 rounded-full object-c
