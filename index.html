@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Đăng Nhập / Đăng Ký Supabase</title>
+    <title>Mạng Xã Hội - Supabase Real</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client CDN -->
@@ -33,25 +33,85 @@
 
             <div id="error-msg" class="text-red-400 text-sm hidden"></div>
 
-            <button type="submit" id="submit-btn" 
+            <button type="submit" 
                 class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 transition font-semibold rounded-lg shadow-md">
                 Tiếp tục
             </button>
         </form>
     </div>
 
-    <!-- TRANG CHỦ (ẨN BAN ĐẦU) -->
-    <div id="dashboard-container" class="hidden bg-gray-800 p-8 rounded-2xl shadow-xl w-[450px] border border-gray-700 text-center">
-        <h1 class="text-3xl font-bold text-green-400 mb-2">Trang Chủ</h1>
-        <p class="text-gray-300 mb-6">Xin chào, <span id="user-display" class="font-bold text-indigo-400"></span>!</p>
-        <button id="logout-btn" 
-            class="px-6 py-2 bg-red-600 hover:bg-red-700 transition font-semibold rounded-lg shadow-md">
-            Đăng xuất
-        </button>
+    <!-- TRANG CHỦ (NỀN TRẮNG SÁNG) -->
+    <div id="dashboard-container" class="hidden bg-gray-100 text-gray-900 w-full min-h-screen flex flex-col">
+        <!-- Thanh Header -->
+        <header class="bg-white shadow px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img id="header-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border" alt="Avatar">
+                <h1 class="text-xl font-bold text-indigo-600">Xin chào, <span id="user-display"></span>!</h1>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="switchTab('home')" id="tab-home-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium">Bảng tin</button>
+                <button onclick="switchTab('search')" id="tab-search-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Tìm kiếm bạn bè</button>
+                <button onclick="switchTab('settings')" id="tab-settings-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Cài đặt</button>
+            </div>
+        </header>
+
+        <!-- Nội dung chính -->
+        <main class="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
+            
+            <!-- Tab 1: Bảng tin -->
+            <div id="content-home" class="space-y-4">
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h2 class="text-lg font-bold mb-2">Bảng tin chung</h2>
+                    <p class="text-gray-600">Chào mừng bạn đã đến với mạng xã hội động!</p>
+                </div>
+            </div>
+
+            <!-- Tab 2: Tìm kiếm bạn bè -->
+            <div id="content-search" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h2 class="text-lg font-bold mb-4">Tìm kiếm người dùng</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="search-input" placeholder="Nhập tên tài khoản..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button id="search-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Tìm</button>
+                    </div>
+                    <div id="search-results" class="space-y-3">
+                        <p class="text-gray-500 text-sm">Nhập tên và bấm tìm kiếm để kết bạn.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h2 class="text-lg font-bold mb-4">Lời mời kết bạn & Bạn bè</h2>
+                    <div id="requests-list" class="space-y-3">
+                        <p class="text-gray-500 text-sm">Đang tải danh sách...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Cài đặt & Đổi Avatar & Đăng xuất -->
+            <div id="content-settings" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-xl shadow max-w-md mx-auto space-y-6">
+                    <h2 class="text-xl font-bold text-center">Cài đặt tài khoản</h2>
+                    
+                    <div class="flex flex-col items-center space-y-3">
+                        <img id="settings-avatar" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 shadow" alt="Avatar">
+                        <label class="cursor-pointer bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition">
+                            Đổi ảnh đại diện từ máy
+                            <input type="file" id="avatar-input" accept="image/*" class="hidden">
+                        </label>
+                    </div>
+
+                    <hr class="border-gray-200">
+
+                    <button id="logout-btn" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition">
+                        Đăng xuất tài khoản
+                    </button>
+                </div>
+            </div>
+
+        </main>
     </div>
 
     <script>
-        // Cấu hình kết nối Supabase
         const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
         
@@ -65,66 +125,223 @@
         const errorMsg = document.getElementById('error-msg');
         const userDisplay = document.getElementById('user-display');
         const logoutBtn = document.getElementById('logout-btn');
+        
+        const headerAvatar = document.getElementById('header-avatar');
+        const settingsAvatar = document.getElementById('settings-avatar');
+        const avatarInput = document.getElementById('avatar-input');
 
-        // Kiểm tra xem đã đăng nhập trước đó chưa (lưu trong localStorage)
-        const currentUser = localStorage.getItem('current_user');
-        if (currentUser) {
-            showDashboard(currentUser);
+        let currentUser = null;
+
+        // Kiểm tra phiên đăng nhập sẵn
+        async function checkUserSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                loadUserData();
+            }
         }
+        checkUserSession();
 
-        // Xử lý khi bấm nút Đăng nhập / Đăng ký chung 1 chỗ
+        // Đăng nhập / Đăng ký
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.add('hidden');
             
-            const username = usernameInput.value.trim();
+            const username = usernameInput.value.trim().toLowerCase();
             const password = passwordInput.value.trim();
+            const fakeEmail = `${username}@users.com`;
 
-            // Sử dụng đuôi @users.com hợp lệ
-            const fakeEmail = `${username.toLowerCase()}@users.com`;
-
-            // Thử đăng nhập trước
             let { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: fakeEmail,
                 password: password
             });
 
-            // Nếu đăng nhập lỗi (chưa có tài khoản hoặc sai mật khẩu), tiến hành đăng ký mới
             if (error) {
                 let { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
                     email: fakeEmail,
-                    password: password,
-                    options: {
-                        data: { display_name: username }
-                    }
+                    password: password
                 });
 
                 if (signUpError) {
                     errorMsg.textContent = "Lỗi: " + signUpError.message;
                     errorMsg.classList.remove('hidden');
                 } else {
-                    handleLoginSuccess(username);
+                    currentUser = signUpError.user;
+                    // Tạo profile mặc định
+                    await supabaseClient.from('profiles').insert([
+                        { id: currentUser.id, username: username, avatar_url: '' }
+                    ]);
+                    loadUserData();
                 }
             } else {
-                handleLoginSuccess(username);
+                currentUser = data.user;
+                loadUserData();
             }
         });
 
-        function handleLoginSuccess(username) {
-            localStorage.setItem('current_user', username);
-            showDashboard(username);
-        }
-
-        function showDashboard(username) {
+        async function loadUserData() {
             authContainer.classList.add('hidden');
             dashboardContainer.classList.remove('hidden');
-            userDisplay.textContent = username;
+
+            // Lấy thông tin từ bảng profiles
+            let { data, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (data) {
+                userDisplay.textContent = data.username;
+                if (data.avatar_url) {
+                    headerAvatar.src = data.avatar_url;
+                    settingsAvatar.src = data.avatar_url;
+                }
+            }
+            loadFriendRequests();
         }
 
-        // Đăng xuất tài khoản
+        // Chuyển tab
+        function switchTab(tabName) {
+            document.getElementById('content-home').classList.add('hidden');
+            document.getElementById('content-search').classList.add('hidden');
+            document.getElementById('content-settings').classList.add('hidden');
+
+            document.getElementById('tab-home-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
+            document.getElementById('tab-search-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
+            document.getElementById('tab-settings-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
+
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
+        }
+
+        // Đổi Avatar từ máy và lưu vào bảng profiles
+        avatarInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(uploadEvent) {
+                const base64Image = uploadEvent.target.result;
+                
+                headerAvatar.src = base64Image;
+                settingsAvatar.src = base64Image;
+
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({ avatar_url: base64Image })
+                    .eq('id', currentUser.id);
+
+                if (error) {
+                    alert("Lỗi lưu ảnh: " + error.message);
+                } else {
+                    alert("Đổi ảnh đại diện thành công!");
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Tìm kiếm người dùng trong Database
+        document.getElementById('search-btn').addEventListener('click', async () => {
+            const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = 'Đang tìm kiếm...';
+
+            if (!keyword) return;
+
+            let { data, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .ilike('username', `%${keyword}%`)
+                .neq('id', currentUser.id);
+
+            if (error || !data || data.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-gray-500 text-sm">Không tìm thấy người dùng nào.</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '';
+            data.forEach(user => {
+                resultsDiv.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <img src="${user.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
+                            <span class="font-semibold">${user.username}</span>
+                        </div>
+                        <button onclick="sendFriendRequest('${user.id}')" class="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Kết bạn</button>
+                    </div>
+                `;
+            });
+        });
+
+        // Gửi lời mời kết bạn
+        async function sendFriendRequest(receiverId) {
+            let { error } = await supabaseClient
+                .from('friend_requests')
+                .insert([{ sender_id: currentUser.id, receiver_id: receiverId, status: 'pending' }]);
+
+            if (error) {
+                alert("Đã gửi lời mời trước đó hoặc có lỗi xảy ra!");
+            } else {
+                alert("Đã gửi lời mời kết bạn thành công!");
+            }
+        }
+
+        // Tải danh sách kết bạn & lời mời
+        async function loadFriendRequests() {
+            const listDiv = document.getElementById('requests-list');
+            
+            let { data, error } = await supabaseClient
+                .from('friend_requests')
+                .select(`id, status, sender_id`)
+                .eq('receiver_id', currentUser.id)
+                .eq('status', 'pending');
+
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<p class="text-gray-500 text-sm">Không có lời mời kết bạn nào.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = '';
+            for (let req of data) {
+                // Lấy thông tin người gửi
+                let { data: senderData } = await supabaseClient
+                    .from('profiles')
+                    .select('username, avatar_url')
+                    .eq('id', req.sender_id)
+                    .single();
+
+                if (senderData) {
+                    listDiv.innerHTML += `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <img src="${senderData.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
+                                <span class="font-semibold">${senderData.username} muốn kết bạn</span>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="acceptRequest('${req.id}')" class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg">Đồng ý</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Đồng ý kết bạn
+        async function acceptRequest(reqId) {
+            let { error } = await supabaseClient
+                .from('friend_requests')
+                .update({ status: 'accepted' })
+                .eq('id', reqId);
+
+            if (!error) {
+                alert("Đã chấp nhận kết bạn!");
+                loadFriendRequests();
+            }
+        }
+
+        // Đăng xuất
         logoutBtn.addEventListener('click', async () => {
             await supabaseClient.auth.signOut();
-            localStorage.removeItem('current_user');
             dashboardContainer.classList.add('hidden');
             authContainer.classList.remove('hidden');
             usernameInput.value = '';
