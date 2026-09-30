@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Game - Loading & Custom Background</title>
-    <!-- Thêm thư viện Supabase JS từ CDN -->
+    <title>Web Game - 5s Loading</title>
+    <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -28,7 +28,6 @@
             position: relative;
         }
 
-        /* Lớp phủ tối để chữ nổi bật hơn khi có ảnh nền */
         .overlay {
             position: absolute;
             top: 0;
@@ -39,7 +38,7 @@
             z-index: 1;
         }
 
-        /* --- MÀN HÌNH LOADING --- */
+        /* --- MÀN HÌNH LOADING 5 GIÂY --- */
         #loading-screen {
             position: fixed;
             top: 0;
@@ -52,7 +51,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.6s ease;
         }
 
         .loader-spinner {
@@ -139,7 +138,7 @@
             box-shadow: 0 6px 20px rgba(252, 0, 255, 0.4);
         }
 
-        /* --- KHU VỰC QUẢN LÝ ẢNH NỀN (XÓA ĐI SAU KHI DÙNG XONG) --- */
+        /* --- PHẦN ADMIN UPLOAD NỀN (XÓA ĐI NẾU KHÔNG CẦN) --- */
         .admin-panel {
             position: absolute;
             bottom: 20px;
@@ -162,7 +161,7 @@
     <!-- Màn hình Loading -->
     <div id="loading-screen">
         <div class="loader-spinner"></div>
-        <div id="loading-text">Đang tải tài nguyên game... 0%</div>
+        <div id="loading-text">Đang tải game... 0%</div>
     </div>
 
     <!-- Lớp phủ nền -->
@@ -179,47 +178,53 @@
         </div>
     </div>
 
-    <!-- PHẦN UPLOAD ẢNH NỀN SUPABASE -->
+    <!-- NÚT UPLOAD ẢNH NỀN SUPABASE -->
     <div class="admin-panel">
         <label>Đổi ảnh nền game (Supabase):</label><br>
         <input type="file" id="bgInput" accept="image/*" onchange="uploadBackground(this)">
     </div>
 
     <script>
-        // --- CẤU HÌNH SUPABASE CỦA MÀY ---
+        // --- CẤU HÌNH SUPABASE ---
         const SUPABASE_URL = 'ĐIỀN_SUPABASE_URL_VÀO_ĐÂY';
         const SUPABASE_ANON_KEY = 'ĐIỀN_SUPABASE_ANON_KEY_VÀO_ĐÂY';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 1. Load ảnh nền đã lưu ngay khi khởi động
+        // Load ảnh nền đã lưu từ trước (nếu có)
         const savedBg = localStorage.getItem('game_custom_bg');
         if (savedBg) {
             document.body.style.backgroundImage = `url('${savedBg}')`;
         }
 
-        // 2. Xử lý màn hình Loading chạy mượt mà, không bị kẹt
-        window.addEventListener('load', () => {
-            let progress = 0;
+        // --- HÀM FAKE LOADING ĐÚNG 5 GIÂY (5000ms) ---
+        window.addEventListener('DOMContentLoaded', () => {
+            let currentPercent = 0;
+            const totalDuration = 5000; // 5 giây
+            const intervalTime = 50;    // Cập nhật mỗi 50ms cho mượt
+            const increment = 100 / (totalDuration / intervalTime); // Mỗi bước tăng bao nhiêu %
+
             const loadingText = document.getElementById('loading-text');
             const loadingScreen = document.getElementById('loading-screen');
 
-            const loadInterval = setInterval(() => {
-                progress += Math.floor(Math.random() * 8) + 5; // Tăng ngẫu nhiên từ 5-12%
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(loadInterval);
+            const fakeLoadTimer = setInterval(() => {
+                currentPercent += increment;
+                
+                if (currentPercent >= 100) {
+                    currentPercent = 100;
+                    clearInterval(fakeLoadTimer);
                     
-                    // Ẩn màn hình loading
+                    // Ẩn màn hình loading đi
                     loadingScreen.style.opacity = '0';
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
-                    }, 500);
+                    }, 600); // Khớp với thời gian transition CSS
                 }
-                loadingText.innerText = `Đang tải tài nguyên game... ${progress}%`;
-            }, 50); // Chạy nhanh hơn và mượt hơn
+
+                loadingText.innerText = `Đang tải game... ${Math.floor(currentPercent)}%`;
+            }, intervalTime);
         });
 
-        // 3. Hàm upload ảnh nền lên Supabase Storage
+        // Hàm upload ảnh nền lên Supabase Storage
         async function uploadBackground(input) {
             const file = input.files[0];
             if (!file) return;
@@ -243,10 +248,7 @@
 
             const imageUrl = publicURLData.publicUrl;
 
-            // Đổi nền ngay lập tức
             document.body.style.backgroundImage = `url('${imageUrl}')`;
-
-            // Lưu vào LocalStorage
             localStorage.setItem('game_custom_bg', imageUrl);
 
             alert("Đổi ảnh nền thành công! Giờ mày có thể xóa đoạn code .admin-panel đi được rồi.");
