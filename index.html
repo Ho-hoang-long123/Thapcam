@@ -1,397 +1,398 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mạng Xã Hội - Custom Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mạng Xã Hội</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+<body class="bg-gray-900 text-white min-h-screen">
 
-    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
-    <div id="auth-container" class="bg-gray-800 p-8 rounded-2xl shadow-xl w-96 border border-gray-700">
-        <h2 class="text-2xl font-bold mb-2 text-center text-indigo-400">Đăng nhập / Đăng ký</h2>
-        <p class="text-sm text-gray-400 text-center mb-6">Nhập tên tài khoản và mật khẩu bất kỳ</p>
-        
-        <form id="auth-form" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Tên tài khoản</label>
-                <input type="text" id="username" required 
-                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
-                    placeholder="Ví dụ: player123">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
-                <input type="password" id="password" required 
-                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
-                    placeholder="••••••••">
-            </div>
-
-            <div id="error-msg" class="text-red-400 text-sm hidden"></div>
-
-            <button type="submit" 
-                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 transition font-semibold rounded-lg shadow-md">
-                Tiếp tục
-            </button>
-        </form>
+  <!-- ĐĂNG NHẬP -->
+  <div id="auth" class="flex items-center justify-center min-h-screen">
+    <div class="bg-gray-800 p-8 rounded-2xl w-96 border border-gray-700">
+      <h2 class="text-2xl font-bold text-center text-indigo-400 mb-2">Đăng nhập / Đăng ký</h2>
+      <p class="text-sm text-gray-400 text-center mb-6">Nhập tên tài khoản và mật khẩu</p>
+      <form id="authForm" class="space-y-4">
+        <input type="text" id="username" placeholder="Tên tài khoản" required
+          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500">
+        <input type="password" id="password" placeholder="Mật khẩu" required
+          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500">
+        <div id="error" class="text-red-400 text-sm hidden"></div>
+        <button class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold">Tiếp tục</button>
+      </form>
     </div>
+  </div>
 
-    <!-- TRANG CHỦ -->
-    <div id="dashboard-container" class="hidden bg-gray-100 text-gray-900 w-full min-h-screen flex flex-col">
-        <!-- Thanh Header -->
-        <header class="bg-white shadow px-6 py-4 flex justify-between items-center flex-wrap gap-3">
-            <div class="flex items-center space-x-3">
-                <img id="header-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border" alt="Avatar">
-                <h1 class="text-xl font-bold text-indigo-600">Xin chào, <span id="user-display"></span>!</h1>
-            </div>
-            <div class="flex space-x-2 flex-wrap gap-2">
-                <button onclick="switchTab('home')" id="tab-home-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium">Bảng tin</button>
-                <button onclick="switchTab('search')" id="tab-search-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Tìm kiếm bạn bè</button>
-                <button onclick="switchTab('messages')" id="tab-messages-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Tin nhắn</button>
-                <button onclick="switchTab('settings')" id="tab-settings-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">Cài đặt</button>
-            </div>
-        </header>
+  <!-- TRANG CHÍNH -->
+  <div id="app" class="hidden min-h-screen bg-gray-100 text-gray-900 flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+      <div class="flex items-center gap-3">
+        <img id="headerAvatar" src="https://via.placeholder.com/150" class="w-9 h-9 rounded-full object-cover border">
+        <span class="font-bold text-indigo-600">Xin chào, <span id="userName"></span></span>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="tab('home')" id="btn-home" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm">Bảng tin</button>
+        <button onclick="tab('search')" id="btn-search" class="px-3 py-1.5 bg-gray-200 rounded-lg text-sm">Tìm bạn</button>
+        <button onclick="tab('chat')" id="btn-chat" class="px-3 py-1.5 bg-gray-200 rounded-lg text-sm">Tin nhắn</button>
+        <button onclick="tab('settings')" id="btn-settings" class="px-3 py-1.5 bg-gray-200 rounded-lg text-sm">Cài đặt</button>
+      </div>
+    </header>
 
-        <!-- Nội dung chính -->
-        <main class="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
-            
-            <!-- Tab 1: Bảng tin -->
-            <div id="content-home" class="space-y-4">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-2">Bảng tin chung</h2>
-                    <p class="text-gray-600">Chào mừng bạn đã kết nối thành công!</p>
-                </div>
-            </div>
+    <main class="flex-1 max-w-3xl w-full mx-auto p-4">
 
-            <!-- Tab 2: Tìm kiếm bạn bè -->
-            <div id="content-search" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-4">Tìm kiếm người dùng</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="search-input" placeholder="Nhập tên tài khoản..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button id="search-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Tìm</button>
-                    </div>
-                    <div id="search-results" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Nhập tên và bấm tìm kiếm để kết bạn.</p>
-                    </div>
-                </div>
+      <!-- Bảng tin -->
+      <div id="page-home">
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h2 class="font-bold text-lg mb-2">Bảng tin</h2>
+          <p class="text-gray-600">Chào mừng bạn đã đăng nhập thành công!</p>
+        </div>
+      </div>
 
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-4">Lời mời kết bạn đang chờ</h2>
-                    <div id="requests-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Không có lời mời nào.</p>
-                    </div>
-                </div>
+      <!-- Tìm bạn -->
+      <div id="page-search" class="hidden space-y-4">
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h2 class="font-bold text-lg mb-3">Tìm kiếm người dùng</h2>
+          <div class="flex gap-2">
+            <input id="searchInput" placeholder="Nhập tên..." class="flex-1 px-3 py-2 border rounded-lg">
+            <button onclick="searchUser()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Tìm</button>
+          </div>
+          <div id="searchResult" class="mt-4 space-y-2"></div>
+        </div>
 
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h2 class="text-lg font-bold mb-4">Danh sách bạn bè của bạn</h2>
-                    <div id="friends-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Chưa có bạn bè nào.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h2 class="font-bold text-lg mb-3">Lời mời kết bạn</h2>
+          <div id="requestList" class="space-y-2 text-sm text-gray-500">Không có lời mời</div>
+        </div>
 
-            <!-- Tab 3: Tin nhắn -->
-            <div id="content-messages" class="hidden">
-                <div class="bg-white rounded-xl shadow overflow-hidden flex flex-col md:flex-row" style="height: 600px;">
-                    <!-- Danh sách bạn bè bên trái -->
-                    <div class="w-full md:w-1/3 border-r border-gray-200 flex flex-col">
-                        <div class="p-4 border-b border-gray-200 bg-gray-50">
-                            <h2 class="font-bold text-lg">Tin nhắn</h2>
-                            <p class="text-xs text-gray-500 mt-1">Chọn bạn bè để chat</p>
-                        </div>
-                        <div id="chat-friends-list" class="flex-1 overflow-y-auto p-2 space-y-1">
-                            <p class="text-gray-500 text-sm p-3">Đang tải danh sách bạn bè...</p>
-                        </div>
-                    </div>
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h2 class="font-bold text-lg mb-3">Bạn bè</h2>
+          <div id="friendList" class="space-y-2 text-sm text-gray-500">Chưa có bạn bè</div>
+        </div>
+      </div>
 
-                    <!-- Khung chat bên phải -->
-                    <div class="w-full md:w-2/3 flex flex-col">
-                        <!-- Header chat -->
-                        <div id="chat-header" class="p-4 border-b border-gray-200 bg-gray-50 flex items-center space-x-3">
-                            <img id="chat-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border hidden">
-                            <div>
-                                <h3 id="chat-username" class="font-semibold text-gray-700">Chọn một người bạn để bắt đầu chat</h3>
-                                <p id="chat-status" class="text-xs text-gray-400"></p>
-                            </div>
-                        </div>
+      <!-- Tin nhắn (giao diện đơn giản) -->
+      <div id="page-chat" class="hidden">
+        <div class="bg-white rounded-xl shadow overflow-hidden" style="height:580px">
+          <!-- Chọn bạn -->
+          <div class="p-3 border-b bg-gray-50 flex gap-2 items-center">
+            <select id="friendSelect" onchange="startChat()" class="flex-1 px-3 py-2 border rounded-lg text-sm">
+              <option value="">-- Chọn bạn để chat --</option>
+            </select>
+          </div>
 
-                        <!-- Nội dung tin nhắn -->
-                        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-                            <div class="text-center text-gray-400 text-sm mt-20">
-                                ← Chọn bạn bè từ danh sách bên trái để nhắn tin
-                            </div>
-                        </div>
+          <!-- Tin nhắn -->
+          <div id="chatBox" class="h-[420px] overflow-y-auto p-4 space-y-3 bg-gray-50 text-sm">
+            <p class="text-center text-gray-400 mt-16">Chọn bạn ở trên để bắt đầu nhắn tin</p>
+          </div>
 
-                        <!-- Ô nhập tin nhắn -->
-                        <div id="chat-input-area" class="p-4 border-t border-gray-200 bg-white hidden">
-                            <div class="flex gap-2">
-                                <input type="text" id="message-input" placeholder="Nhập tin nhắn..." 
-                                    class="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    onkeypress="if(event.key === 'Enter') sendMessage()">
-                                <button onclick="sendMessage()" class="px-5 py-2 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition">
-                                    Gửi
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <!-- Gửi tin -->
+          <div class="p-3 border-t flex gap-2">
+            <input id="msgInput" placeholder="Nhập tin nhắn..." class="flex-1 px-3 py-2 border rounded-full text-sm"
+              onkeypress="if(event.key==='Enter') sendMsg()">
+            <button onclick="sendMsg()" class="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm">Gửi</button>
+          </div>
+        </div>
+      </div>
 
-            <!-- Tab 4: Cài đặt -->
-            <div id="content-settings" class="hidden space-y-4">
-                <div class="bg-white p-6 rounded-xl shadow max-w-md mx-auto space-y-6">
-                    <h2 class="text-xl font-bold text-center">Cài đặt tài khoản</h2>
-                    
-                    <div class="flex flex-col items-center space-y-3">
-                        <img id="settings-avatar" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 shadow" alt="Avatar">
-                        <label class="cursor-pointer bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition">
-                            Đổi ảnh đại diện từ máy
-                            <input type="file" id="avatar-input" accept="image/*" class="hidden">
-                        </label>
-                    </div>
+      <!-- Cài đặt -->
+      <div id="page-settings" class="hidden">
+        <div class="bg-white p-6 rounded-xl shadow max-w-sm mx-auto space-y-5">
+          <h2 class="font-bold text-xl text-center">Cài đặt</h2>
+          <div class="flex flex-col items-center gap-3">
+            <img id="setAvatar" src="https://via.placeholder.com/150" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-500">
+            <label class="cursor-pointer bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg text-sm">
+              Đổi ảnh đại diện
+              <input type="file" id="avatarInput" accept="image/*" class="hidden">
+            </label>
+          </div>
+          <button onclick="logout()" class="w-full py-2.5 bg-red-600 text-white rounded-lg font-semibold">Đăng xuất</button>
+        </div>
+      </div>
 
-                    <hr class="border-gray-200">
+    </main>
+  </div>
 
-                    <button id="logout-btn" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition">
-                        Đăng xuất tài khoản
-                    </button>
-                </div>
-            </div>
+<script>
+const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        </main>
+let user = null;
+let chatWith = null;
+let timer = null;
+
+// ===== AUTH =====
+const saved = localStorage.getItem('user');
+if (saved) {
+  user = JSON.parse(saved);
+  showApp();
+}
+
+document.getElementById('authForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('username').value.trim().toLowerCase();
+  const password = document.getElementById('password').value.trim();
+  const err = document.getElementById('error');
+  err.classList.add('hidden');
+
+  try {
+    let { data } = await sb.from('profiles').select('*').eq('username', username).maybeSingle();
+
+    if (data) {
+      if (data.password !== password) {
+        err.textContent = 'Sai mật khẩu';
+        err.classList.remove('hidden');
+        return;
+      }
+      user = data;
+    } else {
+      const { data: newUser, error } = await sb.from('profiles')
+        .insert([{ username, password, avatar_url: null }]).select().single();
+      if (error) throw error;
+      user = newUser;
+    }
+
+    localStorage.setItem('user', JSON.stringify(user));
+    showApp();
+  } catch (e) {
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  }
+};
+
+function showApp() {
+  document.getElementById('auth').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('userName').textContent = user.username;
+  const av = user.avatar_url || 'https://via.placeholder.com/150';
+  document.getElementById('headerAvatar').src = av;
+  document.getElementById('setAvatar').src = av;
+  loadRequests();
+  loadFriends();
+}
+
+function logout() {
+  clearInterval(timer);
+  localStorage.removeItem('user');
+  location.reload();
+}
+
+// ===== TAB =====
+function tab(name) {
+  ['home','search','chat','settings'].forEach(p => {
+    document.getElementById('page-' + p).classList.add('hidden');
+    document.getElementById('btn-' + p).className = 'px-3 py-1.5 bg-gray-200 rounded-lg text-sm';
+  });
+  document.getElementById('page-' + name).classList.remove('hidden');
+  document.getElementById('btn-' + name).className = 'px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm';
+
+  if (name === 'chat') loadChatFriends();
+  if (name !== 'chat') clearInterval(timer);
+}
+
+// ===== BẠN BÈ =====
+async function searchUser() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const box = document.getElementById('searchResult');
+  if (!q) return;
+
+  const { data } = await sb.from('profiles').select('*').ilike('username', `%${q}%`).neq('id', user.id);
+  if (!data?.length) {
+    box.innerHTML = '<p class="text-gray-500 text-sm">Không tìm thấy</p>';
+    return;
+  }
+  box.innerHTML = data.map(u => `
+    <div class="flex justify-between items-center p-2 border rounded-lg">
+      <div class="flex items-center gap-2">
+        <img src="${u.avatar_url || 'https://via.placeholder.com/150'}" class="w-8 h-8 rounded-full">
+        <span class="font-medium">${u.username}</span>
+      </div>
+      <button onclick="addFriend('${u.id}')" class="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg">Kết bạn</button>
     </div>
+  `).join('');
+}
 
-    <script>
-        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function addFriend(id) {
+  const { error } = await sb.from('friend_requests').insert([{ sender_id: user.id, receiver_id: id, status: 'pending' }]);
+  alert(error ? 'Đã gửi rồi hoặc lỗi' : 'Đã gửi lời mời!');
+}
 
-        const authContainer = document.getElementById('auth-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const authForm = document.getElementById('auth-form');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const errorMsg = document.getElementById('error-msg');
-        const userDisplay = document.getElementById('user-display');
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        const headerAvatar = document.getElementById('header-avatar');
-        const settingsAvatar = document.getElementById('settings-avatar');
-        const avatarInput = document.getElementById('avatar-input');
+async function loadRequests() {
+  const box = document.getElementById('requestList');
+  const { data } = await sb.from('friend_requests').select('id, sender_id').eq('receiver_id', user.id).eq('status', 'pending');
+  if (!data?.length) {
+    box.innerHTML = '<p class="text-gray-500">Không có lời mời</p>';
+    return;
+  }
+  box.innerHTML = '';
+  for (const r of data) {
+    const { data: s } = await sb.from('profiles').select('username, avatar_url').eq('id', r.sender_id).single();
+    if (s) {
+      box.innerHTML += `
+        <div class="flex justify-between items-center p-2 border rounded-lg">
+          <div class="flex items-center gap-2">
+            <img src="${s.avatar_url || 'https://via.placeholder.com/150'}" class="w-8 h-8 rounded-full">
+            <span>${s.username}</span>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="reply('${r.id}','accepted')" class="px-2 py-1 bg-green-600 text-white text-xs rounded">Đồng ý</button>
+            <button onclick="reply('${r.id}','rejected')" class="px-2 py-1 bg-red-600 text-white text-xs rounded">Xóa</button>
+          </div>
+        </div>`;
+    }
+  }
+}
 
-        let currentUser = null;
-        let currentChatFriend = null;
-        let messagePolling = null;
+async function reply(id, status) {
+  await sb.from('friend_requests').update({ status }).eq('id', id);
+  loadRequests();
+  loadFriends();
+}
 
-        // Giữ phiên đăng nhập
-        const savedUser = localStorage.getItem('current_social_user');
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                loadUserData();
-            } catch (e) {
-                localStorage.removeItem('current_social_user');
-            }
-        }
+async function loadFriends() {
+  const box = document.getElementById('friendList');
+  const { data } = await sb.from('friend_requests')
+    .select('sender_id, receiver_id')
+    .eq('status', 'accepted')
+    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
-        // Đăng nhập / Đăng ký
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorMsg.classList.add('hidden');
-            
-            const username = usernameInput.value.trim().toLowerCase();
-            const password = passwordInput.value.trim();
+  if (!data?.length) {
+    box.innerHTML = '<p class="text-gray-500">Chưa có bạn bè</p>';
+    return;
+  }
+  box.innerHTML = '';
+  for (const r of data) {
+    const fid = r.sender_id === user.id ? r.receiver_id : r.sender_id;
+    const { data: f } = await sb.from('profiles').select('username, avatar_url').eq('id', fid).single();
+    if (f) {
+      box.innerHTML += `
+        <div class="flex items-center gap-2 p-2 border rounded-lg">
+          <img src="${f.avatar_url || 'https://via.placeholder.com/150'}" class="w-8 h-8 rounded-full">
+          <span class="font-medium">${f.username}</span>
+          <span class="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Bạn bè</span>
+        </div>`;
+    }
+  }
+}
 
-            if (!username || !password) return;
+// ===== CHAT (đơn giản) =====
+async function loadChatFriends() {
+  const sel = document.getElementById('friendSelect');
+  sel.innerHTML = '<option value="">-- Chọn bạn để chat --</option>';
 
-            try {
-                let { data: existingUser } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('username', username)
-                    .maybeSingle();
+  const { data } = await sb.from('friend_requests')
+    .select('sender_id, receiver_id')
+    .eq('status', 'accepted')
+    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
-                if (existingUser) {
-                    if (existingUser.password === password) {
-                        currentUser = existingUser;
-                        localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                        loadUserData();
-                    } else {
-                        errorMsg.textContent = "Sai mật khẩu! Vui lòng nhập lại.";
-                        errorMsg.classList.remove('hidden');
-                    }
-                } else {
-                    let { data: newUser, error: insertError } = await supabaseClient
-                        .from('profiles')
-                        .insert([{ username: username, password: password, avatar_url: null }])
-                        .select()
-                        .single();
+  if (!data) return;
 
-                    if (insertError) {
-                        errorMsg.textContent = "Lỗi đăng ký: " + insertError.message;
-                        errorMsg.classList.remove('hidden');
-                    } else {
-                        currentUser = newUser;
-                        localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                        loadUserData();
-                    }
-                }
-            } catch (err) {
-                errorMsg.textContent = "Lỗi kết nối: " + err.message;
-                errorMsg.classList.remove('hidden');
-            }
-        });
+  for (const r of data) {
+    const fid = r.sender_id === user.id ? r.receiver_id : r.sender_id;
+    const { data: f } = await sb.from('profiles').select('id, username').eq('id', fid).single();
+    if (f) {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.username;
+      sel.appendChild(opt);
+    }
+  }
+}
 
-        // Hàm load dữ liệu sau khi đăng nhập (đã an toàn hơn)
-        function loadUserData() {
-            // Luôn hiện dashboard trước, dù có lỗi gì phía sau
-            authContainer.classList.add('hidden');
-            dashboardContainer.classList.remove('hidden');
+function startChat() {
+  const sel = document.getElementById('friendSelect');
+  chatWith = sel.value || null;
+  if (!chatWith) {
+    document.getElementById('chatBox').innerHTML = '<p class="text-center text-gray-400 mt-16">Chọn bạn ở trên để bắt đầu nhắn tin</p>';
+    clearInterval(timer);
+    return;
+  }
+  loadMsg();
+  clearInterval(timer);
+  timer = setInterval(loadMsg, 2500);
+}
 
-            userDisplay.textContent = currentUser.username || 'User';
-            
-            if (currentUser.avatar_url) {
-                headerAvatar.src = currentUser.avatar_url;
-                settingsAvatar.src = currentUser.avatar_url;
-            } else {
-                headerAvatar.src = 'https://via.placeholder.com/150';
-                settingsAvatar.src = 'https://via.placeholder.com/150';
-            }
+async function loadMsg() {
+  if (!chatWith) return;
+  const box = document.getElementById('chatBox');
 
-            // Load bạn bè (không làm crash trang)
-            setTimeout(() => {
-                try { loadFriendRequests(); } catch(e) { console.log(e); }
-                try { loadFriendsList(); } catch(e) { console.log(e); }
-            }, 100);
-        }
+  const { data, error } = await sb.from('messages')
+    .select('*')
+    .or(`and(sender_id.eq.${user.id},receiver_id.eq.${chatWith}),and(sender_id.eq.${chatWith},receiver_id.eq.${user.id})`)
+    .order('created_at', { ascending: true });
 
-        function switchTab(tabName) {
-            document.getElementById('content-home').classList.add('hidden');
-            document.getElementById('content-search').classList.add('hidden');
-            document.getElementById('content-messages').classList.add('hidden');
-            document.getElementById('content-settings').classList.add('hidden');
+  if (error) {
+    box.innerHTML = '<p class="text-center text-red-500 mt-10">Lỗi tải tin nhắn (kiểm tra bảng messages)</p>';
+    return;
+  }
 
-            document.getElementById('tab-home-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
-            document.getElementById('tab-search-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
-            document.getElementById('tab-messages-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
-            document.getElementById('tab-settings-btn').className = "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300";
+  if (!data?.length) {
+    box.innerHTML = '<p class="text-center text-gray-400 mt-16">Chưa có tin nhắn. Hãy gửi lời chào!</p>';
+    return;
+  }
 
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
+  box.innerHTML = data.map(m => {
+    const mine = m.sender_id === user.id;
+    const time = new Date(m.created_at).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+    return `
+      <div class="flex ${mine ? 'justify-end' : 'justify-start'}">
+        <div class="max-w-[75%] px-3 py-2 rounded-2xl text-sm ${mine ? 'bg-indigo-600 text-white' : 'bg-white border'}">
+          <p class="break-words">${esc(m.content)}</p>
+          <p class="text-[10px] ${mine ? 'text-indigo-200' : 'text-gray-400'} text-right mt-0.5">${time}</p>
+        </div>
+      </div>`;
+  }).join('');
 
-            // Chỉ load chat khi người dùng bấm vào tab Tin nhắn
-            if (tabName === 'messages') {
-                loadChatFriendsList();
-            }
+  box.scrollTop = box.scrollHeight;
+}
 
-            // Dừng polling khi rời tab chat
-            if (tabName !== 'messages' && messagePolling) {
-                clearInterval(messagePolling);
-                messagePolling = null;
-            }
-        }
+async function sendMsg() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text || !chatWith) return;
+  input.value = '';
 
-        // Đổi Avatar
-        avatarInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+  const { error } = await sb.from('messages').insert([{
+    sender_id: user.id,
+    receiver_id: chatWith,
+    content: text
+  }]);
 
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                const img = new Image();
-                img.src = uploadEvent.target.result;
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 200;
-                    const MAX_HEIGHT = 200;
-                    let width = img.width;
-                    let height = img.height;
+  if (error) {
+    alert('Lỗi gửi tin: ' + error.message);
+    input.value = text;
+  } else {
+    loadMsg();
+  }
+}
 
-                    if (width > height) {
-                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    } else {
-                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                    }
+function esc(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
 
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+// ===== AVATAR =====
+document.getElementById('avatarInput').onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const img = new Image();
+    img.src = ev.target.result;
+    img.onload = async () => {
+      const canvas = document.createElement('canvas');
+      const size = 200;
+      let w = img.width, h = img.height;
+      if (w > h) { h = h * size / w; w = size; } else { w = w * size / h; h = size; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.7);
 
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-                    headerAvatar.src = compressedBase64;
-                    settingsAvatar.src = compressedBase64;
-
-                    try {
-                        let { error } = await supabaseClient
-                            .from('profiles')
-                            .update({ avatar_url: compressedBase64 })
-                            .eq('id', currentUser.id);
-
-                        if (!error) {
-                            currentUser.avatar_url = compressedBase64;
-                            localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                            alert("Đổi ảnh đại diện thành công!");
-                        } else {
-                            alert("Lỗi lưu ảnh: " + error.message);
-                        }
-                    } catch (err) {
-                        alert("Lỗi: " + err.message);
-                    }
-                };
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // Tìm kiếm người dùng
-        document.getElementById('search-btn').addEventListener('click', async () => {
-            const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-            const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = 'Đang tìm kiếm...';
-
-            if (!keyword) return;
-
-            try {
-                let { data } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .ilike('username', `%${keyword}%`)
-                    .neq('id', currentUser.id);
-
-                if (!data || data.length === 0) {
-                    resultsDiv.innerHTML = '<p class="text-gray-500 text-sm">Không tìm thấy người dùng nào.</p>';
-                    return;
-                }
-
-                resultsDiv.innerHTML = '';
-                data.forEach(user => {
-                    resultsDiv.innerHTML += `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg text-gray-800">
-                            <div class="flex items-center space-x-3">
-                                <img src="${user.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                                <span class="font-semibold">${user.username}</span>
-                            </div>
-                            <button onclick="sendFriendRequest('${user.id}')" class="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Kết bạn</button>
-                        </div>
-                    `;
-                });
-            } catch (err) {
-                resultsDiv.innerHTML = '<p class="text-red-500 text-sm">Lỗi tìm kiếm</p>';
-            }
-        });
-
-        async function sendFriendRequest(receiverId) {
-            try {
-                let { error } = await supabaseClient
-                    .from('friend_requests')
-                    .insert([{ sender_id: currentUser.id, receiver_id: receiverId, status: 'pending' }]);
-
-                if (error) {
-                    alert("Đã gửi lời mời trước đó hoặc có lỗi xảy ra!");
-                } else {
-    
+      await sb.from('profiles').update({ avatar_url: b64 }).eq('id', user.id);
+      user.avatar_url = b64;
+      localStorage.setItem('user', JSON.stringify(user));
+      document.getElementById('headerAvatar').src = b64;
