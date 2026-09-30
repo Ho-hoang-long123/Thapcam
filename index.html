@@ -80,8 +80,8 @@
             const username = usernameInput.value.trim();
             const password = passwordInput.value.trim();
 
-            // Chuyển username thành dạng email giả để tương thích với cơ chế Auth của Supabase
-            const fakeEmail = `${username.toLowerCase()}@customsystem.local`;
+            // Sử dụng đuôi @users.com hợp lệ
+            const fakeEmail = `${username.toLowerCase()}@users.com`;
 
             // Thử đăng nhập trước
             let { data, error } = await supabaseClient.auth.signInWithPassword({
