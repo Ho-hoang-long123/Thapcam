@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mạng Xã Hội - Supabase Custom Auth</title>
+    <title>Mạng Xã Hội - Custom Login</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client CDN -->
@@ -11,14 +11,14 @@
 </head>
 <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
 
-    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ CHUNG 1 CHỖ -->
+    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="auth-container" class="bg-gray-800 p-8 rounded-2xl shadow-xl w-96 border border-gray-700">
         <h2 class="text-2xl font-bold mb-2 text-center text-indigo-400">Đăng nhập / Đăng ký</h2>
-        <p class="text-sm text-gray-400 text-center mb-6">Nhập tên tài khoản và mật khẩu bất kỳ để tiếp tục</p>
+        <p class="text-sm text-gray-400 text-center mb-6">Nhập tên tài khoản và mật khẩu bất kỳ</p>
         
         <form id="auth-form" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Tên đăng nhập</label>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Tên tài khoản</label>
                 <input type="text" id="username" required 
                     class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
                     placeholder="Ví dụ: player123">
@@ -62,7 +62,7 @@
             <div id="content-home" class="space-y-4">
                 <div class="bg-white p-6 rounded-xl shadow">
                     <h2 class="text-lg font-bold mb-2">Bảng tin chung</h2>
-                    <p class="text-gray-600">Chào mừng bạn đã đến với mạng xã hội!</p>
+                    <p class="text-gray-600">Chào mừng bạn đã kết nối thành công!</p>
                 </div>
             </div>
 
@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Cài đặt & Đổi Avatar & Đăng xuất -->
+            <!-- Tab 3: Cài đặt -->
             <div id="content-settings" class="hidden space-y-4">
                 <div class="bg-white p-6 rounded-xl shadow max-w-md mx-auto space-y-6">
                     <h2 class="text-xl font-bold text-center">Cài đặt tài khoản</h2>
@@ -139,14 +139,14 @@
 
         let currentUser = null;
 
-        // Kiểm tra xem trình duyệt đã lưu phiên đăng nhập trước đó chưa
+        // Giữ phiên đăng nhập bằng localStorage
         const savedUser = localStorage.getItem('current_social_user');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             loadUserData();
         }
 
-        // Đăng nhập hoặc Đăng ký tự động
+        // Đăng nhập hoặc Tự động đăng ký
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.add('hidden');
@@ -156,7 +156,6 @@
 
             if (!username || !password) return;
 
-            // Kiểm tra xem tài khoản đã tồn tại chưa
             let { data: existingUser } = await supabaseClient
                 .from('profiles')
                 .select('*')
@@ -164,7 +163,6 @@
                 .maybeSingle();
 
             if (existingUser) {
-                // Đã tồn tại -> Kiểm tra mật khẩu để đăng nhập
                 if (existingUser.password === password) {
                     currentUser = existingUser;
                     localStorage.setItem('current_social_user', JSON.stringify(currentUser));
@@ -174,7 +172,6 @@
                     errorMsg.classList.remove('hidden');
                 }
             } else {
-                // Chưa tồn tại -> Đăng ký mới tự động
                 let { data: newUser, error: insertError } = await supabaseClient
                     .from('profiles')
                     .insert([{ username: username, password: password, avatar_url: null }])
@@ -222,7 +219,7 @@
             document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium";
         }
 
-        // Đổi Avatar từ máy (Tự động nén dung lượng nhỏ gọn để không bị lỗi lưu)
+        // Đổi Avatar (có nén ảnh để không lỗi dung lượng)
         avatarInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -239,15 +236,9 @@
                     let height = img.height;
 
                     if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                     }
 
                     canvas.width = width;
@@ -417,4 +408,10 @@
             currentUser = null;
             dashboardContainer.classList.add('hidden');
             authContainer.classList.remove('hidden');
-            usernameInput.value = '
+            usernameInput.value = '';
+            passwordInput.value = '';
+        });
+    </script>
+</body>
+</html>
+
