@@ -3,395 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mạng Xã Hội - Giao diện Facebook</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Web Game Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* Hiệu ứng nền động nhẹ nhàng */
+        .bg-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(138, 43, 226, 0.2);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: 1;
+            animation: float 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(-20px) scale(1); }
+            100% { transform: translateY(20px) scale(1.1); }
+        }
+
+        /* Container chính của Menu */
+        .menu-container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00dbde, #fc00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(252, 0, 255, 0.3);
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        /* Danh sách nút bấm */
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 220px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #00dbde, #fc00ff);
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(252, 0, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Khu vực hiển thị màn hình game (Ẩn mặc định) */
+        #game-screen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            z-index: 10;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-screen h2 {
+            margin-bottom: 20px;
+            color: #00dbde;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 15px;
+            background: #ff4757;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .back-btn:hover {
+            background: #ff6b81;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-900 flex items-center justify-center min-h-screen">
+<body>
 
-    <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
-    <div id="auth-container" class="bg-white p-8 rounded-2xl shadow-xl w-96 border border-gray-200">
-        <h2 class="text-2xl font-bold mb-2 text-center text-blue-600">Đăng nhập / Đăng ký</h2>
-        <p class="text-sm text-gray-500 text-center mb-6">Nhập tên tài khoản và mật khẩu bất kỳ</p>
-        
-        <form id="auth-form" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tên tài khoản</label>
-                <input type="text" id="username" required 
-                    class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    placeholder="Ví dụ: player123">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
-                <input type="password" id="password" required 
-                    class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    placeholder="••••••••">
-            </div>
+    <div class="bg-glow"></div>
 
-            <div id="error-msg" class="text-red-500 text-sm hidden"></div>
-
-            <button type="submit" 
-                class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white transition font-semibold rounded-lg shadow-md">
-                Tiếp tục
-            </button>
-        </form>
+    <!-- Màn hình Menu chính -->
+    <div class="menu-container" id="main-menu">
+        <h1>GAME CỦA TÔI</h1>
+        <p class="subtitle">HTML5 Web Game Project</p>
+        <div class="menu-buttons">
+            <button class="btn" onclick="startGame()">Chơi Ngay</button>
+            <button class="btn" onclick="openSettings()">Cài Đặt</button>
+            <button class="btn" onclick="openCredits()">Thông Tin</button>
+        </div>
     </div>
 
-    <!-- TRANG CHỦ GIAO DIỆN FACEBOOK -->
-    <div id="dashboard-container" class="hidden bg-gray-100 text-gray-900 w-full min-h-screen flex flex-col">
-        <!-- Thanh Header -->
-        <header class="bg-white shadow px-6 py-3 flex justify-between items-center sticky top-0 z-50">
-            <div class="flex items-center space-x-3">
-                <img id="header-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border" alt="Avatar">
-                <h1 class="text-lg font-bold text-blue-600 hidden sm:block">Xin chào, <span id="user-display"></span>!</h1>
-            </div>
-            <div class="flex space-x-2 sm:space-x-4">
-                <button onclick="switchTab('home')" id="tab-home-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm">Bảng tin</button>
-                <button onclick="switchTab('search')" id="tab-search-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-200">Tìm bạn bè</button>
-                <button onclick="switchTab('settings')" id="tab-settings-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-200">Cài đặt</button>
-            </div>
-        </header>
-
-        <!-- Nội dung chính -->
-        <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
-            
-            <!-- Tab 1: Bảng tin (News Feed giống Facebook) -->
-            <div id="content-home" class="space-y-4">
-                
-                <!-- Hộp tạo bài viết -->
-                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
-                    <div class="flex items-center space-x-3">
-                        <img id="post-input-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border">
-                        <textarea id="post-content-input" placeholder="Hôm nay bạn có gì mới?" rows="2" 
-                            class="w-full bg-gray-100 border-none rounded-2xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none text-sm"></textarea>
-                    </div>
-
-                    <!-- Xem trước Ảnh/Video đính kèm -->
-                    <div id="media-preview-container" class="relative hidden">
-                        <div id="preview-box" class="w-full h-48 bg-black rounded-lg overflow-hidden flex items-center justify-center"></div>
-                        <button onclick="removeMedia()" class="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-1 text-xs px-2 hover:bg-red-600">✕ Xóa</button>
-                    </div>
-
-                    <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <label class="cursor-pointer flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition">
-                            <span class="text-green-500 font-bold">📷/🎥</span> 
-                            <span>Ảnh/Video</span>
-                            <input type="file" id="media-file-input" accept="image/*,video/*" class="hidden">
-                        </label>
-                        <button id="submit-post-btn" onclick="createPost()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow transition">
-                            Đăng bài
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Danh sách bài viết trên bảng tin -->
-                <div id="posts-feed" class="space-y-4">
-                    <p class="text-center text-gray-500 text-sm py-4">Đang tải bảng tin...</p>
-                </div>
-            </div>
-
-            <!-- Tab 2: Tìm kiếm bạn bè -->
-            <div id="content-search" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-                    <h2 class="text-lg font-bold mb-4">Tìm kiếm người dùng</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="search-input" placeholder="Nhập tên tài khoản..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                        <button id="search-btn" class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Tìm</button>
-                    </div>
-                    <div id="search-results" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Nhập tên và bấm tìm kiếm để kết bạn.</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-                    <h2 class="text-lg font-bold mb-4">Lời mời kết bạn đang chờ</h2>
-                    <div id="requests-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Không có lời mời nào.</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-                    <h2 class="text-lg font-bold mb-4">Danh sách bạn bè của bạn</h2>
-                    <div id="friends-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">Chưa có bạn bè nào.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 3: Cài đặt -->
-            <div id="content-settings" class="hidden space-y-4">
-                <div class="bg-white p-6 rounded-xl shadow border border-gray-200 max-w-md mx-auto space-y-6">
-                    <h2 class="text-xl font-bold text-center">Cài đặt tài khoản</h2>
-                    
-                    <div class="flex flex-col items-center space-y-3">
-                        <img id="settings-avatar" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-blue-500 shadow" alt="Avatar">
-                        <label class="cursor-pointer bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition">
-                            Đổi ảnh đại diện từ máy
-                            <input type="file" id="avatar-input" accept="image/*" class="hidden">
-                        </label>
-                    </div>
-
-                    <hr class="border-gray-200">
-
-                    <button id="logout-btn" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition text-sm">
-                        Đăng xuất tài khoản
-                    </button>
-                </div>
-            </div>
-
-        </main>
+    <!-- Màn hình Game (Sẽ bật lên khi bấm Chơi) -->
+    <div id="game-screen">
+        <button class="back-btn" onclick="returnToMenu()">⬅ Thoát</button>
+        <h2>Khu vực Game chạy ở đây</h2>
+        <canvas id="gameCanvas" width="800" height="450" style="background: #222; border: 2px solid #555; border-radius: 8px;"></canvas>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const mainMenu = document.getElementById('main-menu');
+        const gameScreen = document.getElementById('game-screen');
 
-        const authContainer = document.getElementById('auth-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const authForm = document.getElementById('auth-form');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const errorMsg = document.getElementById('error-msg');
-        const userDisplay = document.getElementById('user-display');
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        const headerAvatar = document.getElementById('header-avatar');
-        const postInputAvatar = document.getElementById('post-input-avatar');
-        const settingsAvatar = document.getElementById('settings-avatar');
-        const avatarInput = document.getElementById('avatar-input');
-
-        const mediaFileInput = document.getElementById('media-file-input');
-        const mediaPreviewContainer = document.getElementById('media-preview-container');
-        const previewBox = document.getElementById('preview-box');
-
-        let currentUser = null;
-        let selectedMediaBase64 = null;
-        let selectedMediaType = null;
-
-        // Giữ phiên đăng nhập
-        const savedUser = localStorage.getItem('current_social_user');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            loadUserData();
-        }
-
-        // Xử lý Đăng nhập / Đăng ký
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorMsg.classList.add('hidden');
+        function startGame() {
+            mainMenu.style.display = 'none';
+            gameScreen.style.display = 'flex';
             
-            const username = usernameInput.value.trim().toLowerCase();
-            const password = passwordInput.value.trim();
-
-            if (!username || !password) return;
-
-            let { data: existingUser } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('username', username)
-                .maybeSingle();
-
-            if (existingUser) {
-                if (existingUser.password === password) {
-                    currentUser = existingUser;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    loadUserData();
-                } else {
-                    errorMsg.textContent = "Sai mật khẩu! Vui lòng nhập lại.";
-                    errorMsg.classList.remove('hidden');
-                }
-            } else {
-                let { data: newUser, error: insertError } = await supabaseClient
-                    .from('profiles')
-                    .insert([{ username: username, password: password, avatar_url: null }])
-                    .select()
-                    .single();
-
-                if (insertError) {
-                    errorMsg.textContent = "Lỗi đăng ký: " + insertError.message;
-                    errorMsg.classList.remove('hidden');
-                } else {
-                    currentUser = newUser;
-                    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-                    loadUserData();
-                }
-            }
-        });
-
-        function loadUserData() {
-            authContainer.classList.add('hidden');
-            dashboardContainer.classList.remove('hidden');
-
-            userDisplay.textContent = currentUser.username;
-            const avatarUrl = currentUser.avatar_url || 'https://via.placeholder.com/150';
-            headerAvatar.src = avatarUrl;
-            postInputAvatar.src = avatarUrl;
-            settingsAvatar.src = avatarUrl;
-
-            loadPosts();
-            loadFriendRequests();
-            loadFriendsList();
+            // Khởi tạo game hoặc vẽ lên canvas ở đây sau này
+            initGameCanvas();
         }
 
-        function switchTab(tabName) {
-            document.getElementById('content-home').classList.add('hidden');
-            document.getElementById('content-search').classList.add('hidden');
-            document.getElementById('content-settings').classList.add('hidden');
-
-            document.getElementById('tab-home-btn').className = "px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-200";
-            document.getElementById('tab-search-btn').className = "px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-200";
-            document.getElementById('tab-settings-btn').className = "px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-200";
-
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}-btn`).className = "px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm";
+        function returnToMenu() {
+            gameScreen.style.display = 'none';
+            mainMenu.style.display = 'block';
         }
 
-        // Chọn Ảnh/Video cho bài viết
-        mediaFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                selectedMediaBase64 = uploadEvent.target.result;
-                selectedMediaType = file.type.startsWith('video') ? 'video' : 'image';
-
-                mediaPreviewContainer.classList.remove('hidden');
-                if (selectedMediaType === 'video') {
-                    previewBox.innerHTML = `<video src="${selectedMediaBase64}" class="h-full w-full object-contain" controls></video>`;
-                } else {
-                    previewBox.innerHTML = `<img src="${selectedMediaBase64}" class="h-full w-full object-contain">`;
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function removeMedia() {
-            selectedMediaBase64 = null;
-            selectedMediaType = null;
-            mediaFileInput.value = '';
-            mediaPreviewContainer.classList.add('hidden');
-            previewBox.innerHTML = '';
+        function openSettings() {
+            alert("Tính năng cài đặt đang phát triển!");
         }
 
-        // Đăng bài viết lên Supabase
-        async function createPost() {
-            const content = document.getElementById('post-content-input').value.trim();
-            if (!content && !selectedMediaBase64) {
-                alert("Vui lòng viết nội dung hoặc đính kèm ảnh/video!");
-                return;
-            }
-
-            const btn = document.getElementById('submit-post-btn');
-            btn.disabled = true;
-            btn.textContent = "Đang đăng...";
-
-            let { error } = await supabaseClient.from('posts').insert([{
-                user_id: currentUser.id,
-                content: content,
-                media_url: selectedMediaBase64,
-                media_type: selectedMediaType
-            }]);
-
-            if (error) {
-                alert("Lỗi đăng bài: " + error.message);
-            } else {
-                document.getElementById('post-content-input').value = '';
-                removeMedia();
-                loadPosts();
-            }
-
-            btn.disabled = false;
-            btn.textContent = "Đăng bài";
+        function openCredits() {
+            alert("Được làm bởi bạn với HTML/CSS/JS!");
         }
 
-        // Tải danh sách bài viết bảng tin
-        async function loadPosts() {
-            const feedDiv = document.getElementById('posts-feed');
+        function initGameCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
             
-            let { data: posts, error } = await supabaseClient
-                .from('posts')
-                .select(`*, profiles(username, avatar_url)`)
-                .order('created_at', { ascending: false });
-
-            if (error || !posts || posts.length === 0) {
-                feedDiv.innerHTML = '<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500 text-sm border border-gray-200">Chưa có bài viết nào trên bảng tin.</div>';
-                return;
-            }
-
-            feedDiv.innerHTML = '';
-            posts.forEach(post => {
-                const author = post.profiles || { username: 'Người dùng ẩn danh', avatar_url: null };
-                const timeString = new Date(post.created_at).toLocaleString('vi-VN');
-                
-                let mediaHtml = '';
-                if (post.media_url) {
-                    if (post.media_type === 'video') {
-                        mediaHtml = `<div class="mt-2 bg-black rounded-lg overflow-hidden"><video src="${post.media_url}" class="w-full max-h-96 object-contain" controls></video></div>`;
-                    } else {
-                        mediaHtml = `<div class="mt-2 bg-gray-50 rounded-lg overflow-hidden"><img src="${post.media_url}" class="w-full max-h-96 object-contain"></div>`;
-                    }
-                }
-
-                feedDiv.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
-                        <div class="flex items-center space-x-3">
-                            <img src="${author.avatar_url || 'https://via.placeholder.com/150'}" class="w-10 h-10 rounded-full object-cover border">
-                            <div>
-                                <h3 class="font-bold text-sm text-gray-900">${author.username}</h3>
-                                <p class="text-xs text-gray-400">${timeString}</p>
-                            </div>
-                        </div>
-                        ${post.content ? `<p class="text-sm text-gray-800 whitespace-pre-line">${post.content}</p>` : ''}
-                        ${mediaHtml}
-                    </div>
-                `;
-            });
+            // Vẽ mẫu một khung hình đơn giản
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00dbde';
+            ctx.font = '24px Arial';
+            ctx.fillText("Sẵn sàng viết code game vào đây!", 200, 225);
         }
+    </script>
+</body>
+</html>
 
-        // Đổi Avatar tự động nén nhỏ gọn
-        avatarInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                const img = new Image();
-                img.src = uploadEvent.target.result;
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 200;
-                    const MAX_HEIGHT = 200;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    } else {
-                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-                    headerAvatar.src = compressedBase64;
-                    postInputAvatar.src = compressedBase64;
-                    settingsAvatar.src = compressedBase64;
-
-                    let { error } = await supabaseClient
-                        .from('profiles')
-                        .update({ avatar_url: compressedBase64 })
-                        .eq('id', currentUser.id);
-
-                    if (!error) {
-                        currentUser.avatar_url = compressedBase64;
-                        localStorage.setItem('current_social_user', JSON.stringify(current
