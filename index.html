@@ -1,368 +1,357 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MN Social</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<html lang="vi">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Web Chat Supabase</title>  
+    <!-- Tailwind CSS -->  
+    <script src="https://cdn.tailwindcss.com"></script>  
+    <!-- Supabase JS Client -->  
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
+</head>  
+<body class="bg-slate-100 h-screen flex flex-col">  <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ CHUNG MỘT NƠI -->  
+<div id="auth-screen" class="flex-1 flex items-center justify-center p-4">  
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">  
+        <h1 class="text-2xl font-bold mb-2 text-center text-blue-600">ChatApp Realtime</h1>  
+        <p class="text-center text-sm text-gray-500 mb-6">Nhập tên và mật khẩu. Chưa có tự đăng ký, có rồi tự đăng nhập!</p>  
+          
+        <div class="space-y-4">  
+            <div>  
+                <label class="block text-sm font-medium text-gray-700">Tên tài khoản (Username)</label>  
+                <input type="text" id="username" placeholder="Ví dụ: namcute" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">  
+            </div>  
+            <div>  
+                <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>  
+                <input type="password" id="password" placeholder="Nhập mật khẩu..." class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" onkeypress="if(event.key === 'Enter') handleAuth()">  
+            </div>  
+            <button onclick="handleAuth()" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-semibold hover:bg-blue-700 transition">Vào Chat Ngay</button>  
+        </div>  
+    </div>  
+</div>  
 
-<style>
-*{box-sizing:border-box}
-body{margin:0}
-.icon{
-    width:42px;
-    height:42px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:12px;
-    transition:.2s;
-    cursor:pointer;
-    border: none;
-}
-.icon:hover{transform:scale(1.05)}
-.chat-in{
-    background:#4f46e5;
-    color:white;
-    border-radius:18px 18px 4px 18px;
-    padding: 10px 14px;
-    max-width: 75%;
-    word-break: break-word;
-}
-.chat-out{
-    background:#e5e7eb;
-    color:#111827;
-    border-radius:18px 18px 18px 4px;
-    padding: 10px 14px;
-    max-width: 75%;
-    word-break: break-word;
-}
-</style>
-</head>
+<!-- GIAO DIỆN CHÍNH (SAU KHI ĐĂNG NHẬP) -->  
+<div id="chat-screen" class="hidden flex-1 flex overflow-hidden">  
+    <!-- Sidebar danh sách người dùng -->  
+    <div class="w-1/3 bg-white border-r flex flex-col">  
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">  
+            <div>  
+                <h2 id="current-user-name" class="font-bold text-gray-800">Đang tải...</h2>  
+                <span class="text-xs text-green-500 font-medium">● Online</span>  
+            </div>  
+            <button onclick="logout()" class="text-sm text-red-500 hover:underline">Đăng xuất</button>  
+        </div>  
+          
+        <div class="p-3 border-b">  
+            <input type="text" id="search-user" placeholder="Tìm kiếm người dùng..." class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">  
+        </div>  
 
-<body class="bg-gray-900 text-white min-h-screen">
+        <div id="users-list" class="flex-1 overflow-y-auto divide-y">  
+            <!-- Danh sách user render ở đây -->  
+        </div>  
+    </div>  
 
-<!-- ================= LOGIN ================= -->
-<div id="auth-container" class="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-700 mx-auto mt-20">
-    <h2 class="text-2xl font-bold mb-2 text-center text-indigo-400">Đăng nhập / Đăng ký</h2>
-    <p class="text-sm text-gray-400 text-center mb-6">Nhập tên tài khoản và mật khẩu bất kỳ</p>
-    
-    <form id="auth-form" class="space-y-4">
-        <div>
-            <label class="block text-sm mb-1">Tên tài khoản</label>
-            <input id="username" required autocomplete="username" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ví dụ: player123">
-        </div>
-        <div>
-            <label class="block text-sm mb-1">Mật khẩu</label>
-            <input id="password" type="password" required autocomplete="current-password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
-        </div>
-        <div id="error-msg" class="text-red-400 text-sm hidden"></div>
-        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition cursor-pointer">Tiếp tục</button>
-    </form>
-</div>
+    <!-- Khung chat chi tiết -->  
+    <div class="flex-2 flex flex-col bg-slate-50 flex-1">  
+        <div id="chat-header" class="p-4 bg-white border-b font-bold text-gray-700">  
+            Chọn một người bạn để bắt đầu nhắn tin  
+        </div>  
 
-<!-- ================= APP ================= -->
-<div id="dashboard-container" class="hidden min-h-screen bg-gray-100 text-gray-900">
-    <header class="bg-white shadow px-4 py-3 flex justify-between items-center sticky top-0 z-40">
-        <div class="flex items-center gap-3">
-            <img id="header-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border">
-            <div>
-                <div class="text-xs text-gray-400">Xin chào</div>
-                <div id="user-display" class="font-bold text-indigo-600"></div>
-            </div>
-        </div>
+        <!-- Khung chứa tin nhắn -->  
+        <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">  
+            <div class="text-center text-gray-400 my-auto">Chưa có cuộc trò chuyện nào được chọn.</div>  
+        </div>  
 
-        <div class="flex gap-2">
-            <!-- HOME -->
-            <button id="tab-home-btn" onclick="switchTab('home')" class="icon bg-indigo-600 text-white" title="Trang chủ">
-                <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>
-            </button>
-            <!-- FRIENDS -->
-            <button id="tab-search-btn" onclick="switchTab('search')" class="icon bg-gray-200 text-gray-700" title="Bạn bè">
-                <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </button>
-            <!-- SETTINGS -->
-            <button id="tab-settings-btn" onclick="switchTab('settings')" class="icon bg-gray-200 text-gray-700" title="Cài đặt">
-                <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 1.7-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.55V20h-2.4v-.21a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06-1.7-1.7.06-.06A1.7 1.7 0 0 0 8.6 15a1.7 1.7 0 0 0-1.55-1H6.8v-2.4h.25a1.7 1.7 0 0 0 1.55-1A1.7 1.7 0 0 0 8.26 8.7l-.06-.06 1.7-1.7.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1-1.55V5h2.4v.21a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.7 1.7-.06.06a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.55 1h.21V14h-.21a1.7 1.7 0 0 0-1.55 1z"/></svg>
-            </button>
-        </div>
-    </header>
+        <!-- Khung nhập nội dung -->  
+        <div id="chat-input-box" class="p-4 bg-white border-t hidden flex items-center space-x-2">  
+            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-gray-600 transition" title="Gửi ảnh/video">  
+                📁  
+                <input type="file" id="media-file" accept="image/*,video/*" class="hidden" onchange="previewMedia()">  
+            </label>  
+            <span id="file-name" class="text-xs text-blue-600 truncate max-w-[100px]"></span>  
+            <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onkeypress="if(event.key === 'Enter') sendMessage()">  
+            <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Gửi</button>  
+        </div>  
+    </div>  
+</div>  
 
-    <main class="max-w-4xl mx-auto p-4 md:p-6">
-        <!-- HOME -->
-        <section id="content-home">
-            <div class="bg-white rounded-xl shadow p-6">
-                <h2 class="text-xl font-bold">🏠 Bảng tin</h2>
-                <p class="text-gray-500 mt-2">Chào mừng <b id="home-name"></b>!</p>
-                <p class="text-gray-400 text-sm mt-3">Kết bạn với mọi người để bắt đầu trò chuyện.</p>
-            </div>
-        </section>
+<!-- Script xử lý toàn bộ -->  
+<script>  
+    // THAY THẾ THÔNG TIN SUPABASE CỦA BẠN VÀO ĐÂY  
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';  
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';  
 
-        <!-- FRIENDS -->
-        <section id="content-search" class="hidden space-y-5">
-            <div class="bg-white rounded-xl shadow p-5">
-                <h2 class="font-bold text-lg mb-4">🔎 Tìm người dùng</h2>
-                <div class="flex gap-2">
-                    <input id="search-input" class="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nhập tên tài khoản...">
-                    <button id="search-btn" class="icon bg-indigo-600 text-white" title="Tìm kiếm">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                    </button>
-                </div>
-                <div id="search-results" class="space-y-3 mt-4"></div>
-            </div>
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
 
-            <div class="bg-white rounded-xl shadow p-5">
-                <h2 class="font-bold text-lg mb-4">👋 Lời mời kết bạn</h2>
-                <div id="requests-list"></div>
-            </div>
+    let currentUser = null;  
+    let activeReceiver = null;  
+    let selectedFile = null;  
+    let currentSubscription = null;  
 
-            <div class="bg-white rounded-xl shadow p-5">
-                <h2 class="font-bold text-lg mb-4">👥 Bạn bè</h2>
-                <div id="friends-list"></div>
-            </div>
-        </section>
+    // Kiểm tra xem trình duyệt đã lưu phiên đăng nhập trước đó chưa  
+    async function checkUser() {  
+        const { data: { session } } = await supabaseClient.auth.getSession();  
+        if (session) {  
+            currentUser = session.user;  
+            showChatScreen();  
+        }  
+    }  
+    checkUser();  
 
-        <!-- SETTINGS -->
-        <section id="content-settings" class="hidden">
-            <div class="bg-white rounded-xl shadow p-6 max-w-md mx-auto">
-                <h2 class="text-xl font-bold text-center mb-6">⚙️ Cài đặt</h2>
-                <div class="flex flex-col items-center gap-3">
-                    <img id="settings-avatar" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-indigo-500">
-                    <label class="cursor-pointer bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-medium hover:bg-indigo-100 transition">
-                        Đổi ảnh đại diện (Nhập URL ảnh)
-                        <input id="avatar-input" type="text" placeholder="Dán link ảnh vào đây..." class="mt-2 w-full px-3 py-1 text-sm border rounded bg-white text-black outline-none">
-                    </label>
-                    <button onclick="updateAvatar()" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-700">Cập nhật ảnh</button>
-                </div>
-                <hr class="my-6">
-                <button id="logout-btn" onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition cursor-pointer">Đăng xuất</button>
-            </div>
-        </section>
-    </main>
-</div>
+    // Biến đổi tên thành email nội bộ giả lập  
+    function getFakeEmail(username) {  
+        return `${username.trim().toLowerCase().replace(/\s+/g, '')}@chatapp.local`;  
+    }  
 
-<!-- ================= CHAT MODAL ================= -->
-<div id="chat-modal" class="hidden fixed inset-0 z-50 bg-black/60 p-3 flex items-center justify-center">
-    <div class="bg-white w-full max-w-lg h-[650px] max-h-[92vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="bg-indigo-600 text-white p-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img id="chat-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full object-cover border-2 border-white">
-                <div>
-                    <div id="chat-name" class="font-bold"></div>
-                    <div class="text-xs text-indigo-200">Đang trò chuyện</div>
-                </div>
-            </div>
-            <button onclick="closeChat()" class="w-10 h-10 rounded-full hover:bg-indigo-500 flex items-center justify-center cursor-pointer border-none bg-transparent text-white" title="Đóng">
-                <svg width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
-            </button>
-        </div>
+    // Tự động xử lý Đăng nhập hoặc Đăng ký thông minh  
+    async function handleAuth() {  
+        const username = document.getElementById('username').value.trim();  
+        const password = document.getElementById('password').value.trim();  
 
-        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 flex flex-col"></div>
+        if (!username || !password) {  
+            return alert('Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!');  
+        }  
 
-        <form id="message-form" onsubmit="sendMessage(event)" class="p-3 border-t flex gap-2 bg-white">
-            <input id="message-input" autocomplete="off" class="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nhập tin nhắn...">
-            <button type="submit" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center cursor-pointer border-none" title="Gửi">
-                <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
-            </button>
-        </form>
-    </div>
-</div>
+        const fakeEmail = getFakeEmail(username);  
 
-<script>
-const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_QUA03gl4gHRsj1r95UPtTg_2fUvKIvF';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Thử đăng nhập trước  
+        let { data, error } = await supabaseClient.auth.signInWithPassword({   
+            email: fakeEmail,   
+            password: password   
+        });  
 
-let currentUser = null;
-let currentChatUser = null;
-let chatTimer = null;
+        // Nếu đăng nhập lỗi (do chưa có tài khoản), tiến hành tự động Đăng ký mới luôn  
+        if (error) {  
+            const signUpRes = await supabaseClient.auth.signUp({   
+                email: fakeEmail,   
+                password: password   
+            });  
 
-const authContainer = document.getElementById('auth-container');
-const dashboardContainer = document.getElementById('dashboard-container');
-const authForm = document.getElementById('auth-form');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const errorMsg = document.getElementById('error-msg');
-const userDisplay = document.getElementById('user-display');
-const homeName = document.getElementById('home-name');
-const headerAvatar = document.getElementById('header-avatar');
-const settingsAvatar = document.getElementById('settings-avatar');
+            if (signUpRes.error) {  
+                return alert('Lỗi đăng ký: ' + signUpRes.error.message);  
+            }  
 
-function getAvatar(url){ return url || 'https://via.placeholder.com/150'; }
-function escapeHTML(text){ return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+            if (signUpRes.data.user) {  
+                // Lưu profile vào bảng profiles  
+                const { error: profileError } = await supabaseClient.from('profiles').insert([{   
+                    id: signUpRes.data.user.id,   
+                    username: username   
+                }]);  
 
-const savedUser = localStorage.getItem('current_social_user');
-if(savedUser){
-    try{ currentUser = JSON.parse(savedUser); loadUserData(); }
-    catch(e){ localStorage.removeItem('current_social_user'); }
-}
+                if (profileError) {  
+                    return alert('Lỗi tạo hồ sơ: ' + profileError.message);  
+                }  
 
-authForm.addEventListener('submit', async function(e){
-    e.preventDefault();
-    errorMsg.classList.add('hidden');
-    const username = usernameInput.value.trim().toLowerCase();
-    const password = passwordInput.value.trim();
-    if(!username || !password) return;
+                currentUser = signUpRes.data.user;  
+                showChatScreen();  
+                return;  
+            }  
+        } else if (data.user) {  
+            // Đăng nhập thành công  
+            currentUser = data.user;  
+            showChatScreen();  
+        }  
+    }  
 
-    const {data:existingUser, error} = await supabaseClient.from('profiles').select('*').eq('username',username).maybeSingle();
-    if(error){ errorMsg.textContent = error.message; errorMsg.classList.remove('hidden'); return; }
+    // Đăng xuất  
+    async function logout() {  
+        if (currentSubscription) supabaseClient.removeChannel(currentSubscription);  
+        await supabaseClient.auth.signOut();  
+        currentUser = null;  
+        activeReceiver = null;  
+        document.getElementById('chat-screen').classList.add('hidden');  
+        document.getElementById('auth-screen').classList.remove('hidden');  
+    }  
 
-    if(existingUser){
-        if(existingUser.password !== password){ errorMsg.textContent = 'Sai mật khẩu!'; errorMsg.classList.remove('hidden'); return; }
-        currentUser = existingUser;
-    } else {
-        const {data:newUser, error:insertError} = await supabaseClient.from('profiles').insert([{username, password, avatar_url: null}]).select().single();
-        if(insertError){ errorMsg.textContent = insertError.message; errorMsg.classList.remove('hidden'); return; }
-        currentUser = newUser;
-    }
+    // Hiển thị giao diện chat chính  
+    async function showChatScreen() {  
+        document.getElementById('auth-screen').classList.add('hidden');  
+        document.getElementById('chat-screen').classList.remove('hidden');  
 
-    localStorage.setItem('current_social_user', JSON.stringify(currentUser));
-    loadUserData();
-});
+        const { data } = await supabaseClient.from('profiles').select('username').eq('id', currentUser.id).single();  
+        document.getElementById('current-user-name').innerText = data ? data.username : 'Người dùng';  
 
-function loadUserData(){
-    authContainer.classList.add('hidden');
-    dashboardContainer.classList.remove('hidden');
-    userDisplay.textContent = currentUser.username;
-    homeName.textContent = currentUser.username;
-    headerAvatar.src = getAvatar(currentUser.avatar_url);
-    settingsAvatar.src = getAvatar(currentUser.avatar_url);
-    loadFriendRequests();
-    loadFriendsList();
-}
+        loadUsers();  
+    }  
 
-function switchTab(tab){
-    ['home', 'search', 'settings'].forEach(t=>{
-        document.getElementById('content-'+t).classList.add('hidden');
-        document.getElementById('tab-'+t+'-btn').className = 'icon bg-gray-200 text-gray-700';
-    });
-    document.getElementById('content-'+tab).classList.remove('hidden');
-    document.getElementById('tab-'+tab+'-btn').className = 'icon bg-indigo-600 text-white';
-}
+    // Tải danh sách bạn bè / người dùng khác  
+    async function loadUsers() {  
+        const { data, error } = await supabaseClient.from('profiles').select('*').neq('id', currentUser.id);  
+        if (error) return;  
 
-document.getElementById('search-btn').addEventListener('click', searchUsers);
-document.getElementById('search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') searchUsers(); });
+        const listEl = document.getElementById('users-list');  
+        listEl.innerHTML = '';  
 
-async function searchUsers(){
-    const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-    const result = document.getElementById('search-results');
-    if(!keyword){ result.innerHTML = '<p class="text-gray-400 text-sm">Nhập tên người dùng.</p>'; return; }
-    result.innerHTML = '<p class="text-gray-400">Đang tìm...</p>';
+        if (!data || data.length === 0) {  
+            listEl.innerHTML = '<div class="p-4 text-center text-gray-400 text-sm">Chưa có người dùng nào khác. Hãy mở thêm tab ẩn danh để tạo thêm tài khoản thứ 2 test thử!</div>';  
+            return;  
+        }  
 
-    const {data, error} = await supabaseClient.from('profiles').select('*').ilike('username', `%${keyword}%`).neq('id', currentUser.id);
-    if(error){ result.innerHTML = `<p class="text-red-500">${escapeHTML(error.message)}</p>`; return; }
-    if(!data || data.length===0){ result.innerHTML = '<p class="text-gray-500">Không tìm thấy người dùng.</p>'; return; }
+        data.forEach(user => {  
+            const div = document.createElement('div');  
+            div.className = 'p-3 hover:bg-gray-100 cursor-pointer flex items-center space-x-3 transition';  
+            div.innerHTML = `  
+                <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">  
+                    ${user.username ? user.username.charAt(0).toUpperCase() : 'U'}  
+                </div>  
+                <div>  
+                    <div class="font-semibold text-gray-800">${user.username || 'Không tên'}</div>  
+                    <div class="text-xs text-gray-400">Nhấn để nhắn tin</div>  
+                </div>  
+            `;  
+            div.onclick = () => selectReceiver(user);  
+            listEl.appendChild(div);  
+        });  
+    }  
 
-    result.innerHTML = '';
-    for(const user of data){
-        const relation = await getFriendRelation(user.id);
-        let action = '';
-        if(relation === 'friend') {
-            action = `<button onclick="openChat('${user.id}')" class="icon bg-indigo-600 text-white" title="Nhắn tin">💬</button>
-                      <button onclick="removeFriend('${user.id}')" class="icon bg-red-100 text-red-600" title="Xóa bạn">🗑️</button>`;
-        } else if(relation === 'sent') {
-            action = `<span class="text-xs bg-gray-100 text-gray-500 px-3 py-2 rounded-lg">⏳ Đã gửi</span>`;
-        } else if(relation === 'received') {
-            action = `<button onclick="acceptRequestByUser('${user.id}')" class="icon bg-green-600 text-white" title="Đồng ý">✓</button>`;
-        } else {
-            action = `<button onclick="sendFriendRequest('${user.id}')" class="icon bg-indigo-600 text-white" title="Kết bạn">➕</button>`;
-        }
+    // Chọn người nhận tin nhắn  
+    function selectReceiver(user) {  
+        activeReceiver = user;  
+        document.getElementById('chat-header').innerText = `Đang chat với: ${user.username}`;  
+        document.getElementById('chat-input-box').classList.remove('hidden');  
+        loadMessages();  
+        subscribeToMessages();  
+    }  
 
-        result.innerHTML += `
-        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
-            <div class="flex items-center gap-3">
-                <img src="${getAvatar(user.avatar_url)}" class="w-11 h-11 rounded-full object-cover border">
-                <div>
-                    <div class="font-semibold">${escapeHTML(user.username)}</div>
-                    ${relation==='friend'?'<div class="text-xs text-green-600">Bạn bè</div>':''}
-                </div>
-            </div>
-            <div class="flex gap-2">${action}</div>
-        </div>`;
-    }
-}
+    // Tải lịch sử tin nhắn  
+    async function loadMessages() {  
+        if (!activeReceiver) return;  
 
-async function getFriendRelation(userId){
-    const {data} = await supabaseClient.from('friend_requests').select('id,sender_id,receiver_id,status').or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`).limit(1).maybeSingle();
-    if(!data) return 'none';
-    if(data.status==='accepted') return 'friend';
-    if(data.status==='pending' && data.sender_id===currentUser.id) return 'sent';
-    if(data.status==='pending' && data.receiver_id===currentUser.id) return 'received';
-    return 'none';
-}
+        const { data, error } = await supabaseClient  
+            .from('messages')  
+            .select('*')  
+            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeReceiver.id}),and(sender_id.eq.${activeReceiver.id},receiver_id.eq.${currentUser.id})`)  
+            .order('created_at', { ascending: true });  
 
-async function sendFriendRequest(receiverId){
-    const {error} = await supabaseClient.from('friend_requests').insert([{sender_id:currentUser.id, receiver_id:receiverId, status:'pending'}]);
-    if(error){ alert('Không thể gửi lời mời: '+error.message); return; }
-    alert('Đã gửi lời mời kết bạn!');
-    searchUsers();
-}
+        if (error) return;  
 
-async function loadFriendRequests(){
-    const box = document.getElementById('requests-list');
-    const {data, error} = await supabaseClient.from('friend_requests').select('id,sender_id').eq('receiver_id', currentUser.id).eq('status', 'pending');
-    if(error){ box.innerHTML = `<p class="text-red-500">${escapeHTML(error.message)}</p>`; return; }
-    if(!data || data.length===0){ box.innerHTML = '<p class="text-gray-500 text-sm">Không có lời mời.</p>'; return; }
+        const container = document.getElementById('messages-container');  
+        container.innerHTML = '';  
 
-    box.innerHTML = '';
-    for(const req of data){
-        const {data:user} = await supabaseClient.from('profiles').select('username,avatar_url').eq('id', req.sender_id).single();
-        if(!user) continue;
-        box.innerHTML += `
-        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
-            <div class="flex items-center gap-3">
-                <img src="${getAvatar(user.avatar_url)}" class="w-11 h-11 rounded-full object-cover border">
-                <div>
-                    <div class="font-semibold">${escapeHTML(user.username)}</div>
-                    <div class="text-xs text-gray-400">Muốn kết bạn với bạn</div>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="updateRequest('${req.id}','accepted')" class="icon bg-green-100 text-green-600" title="Đồng ý">✓</button>
-                <button onclick="updateRequest('${req.id}','rejected')" class="icon bg-red-100 text-red-600" title="Từ chối">✕</button>
-            </div>
-        </div>`;
-    }
-}
+        data.forEach(msg => appendMessage(msg));  
+        container.scrollTop = container.scrollHeight;  
+    }  
 
-async function acceptRequestByUser(senderId){
-    const {data:req} = await supabaseClient.from('friend_requests').select('id').eq('sender_id', senderId).eq('receiver_id', currentUser.id).eq('status','pending').maybeSingle();
-    if(req) await updateRequest(req.id, 'accepted');
-}
+    // Thêm tin nhắn vào khung chat  
+    function appendMessage(msg) {  
+        const container = document.getElementById('messages-container');  
+        const isMe = msg.sender_id === currentUser.id;  
 
-async function updateRequest(requestId, status){
-    const {error} = await supabaseClient.from('friend_requests').update({status}).eq('id', requestId);
-    if(error){ alert(error.message); return; }
-    loadFriendRequests();
-    loadFriendsList();
-}
+        const div = document.createElement('div');  
+        div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;  
 
-async function loadFriendsList(){
-    const box = document.getElementById('friends-list');
-    const {data, error} = await supabaseClient.from('friend_requests').select('id,sender_id,receiver_id').eq('status','accepted').or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
-    if(error){ box.innerHTML = `<p class="text-red-500">${escapeHTML(error.message)}</p>`; return; }
-    if(!data || data.length===0){ box.innerHTML = '<p class="text-gray-500 text-sm">Chưa có bạn bè.</p>'; return; }
+        let mediaHTML = '';  
+        if (msg.media_url) {  
+            if (msg.media_type === 'image') {  
+                mediaHTML = `<img src="${msg.media_url}" class="max-w-xs rounded-lg mt-1 mb-1 shadow">`;  
+            } else if (msg.media_type === 'video') {  
+                mediaHTML = `<video src="${msg.media_url}" controls class="max-w-xs rounded-lg mt-1 mb-1 shadow"></video>`;  
+            }  
+        }  
 
-    box.innerHTML = '';
-    for(const friendship of data){
-        const friendId = friendship.sender_id === currentUser.id ? friendship.receiver_id : friendship.sender_id;
-        const {data:friend} = await supabaseClient.from('profiles').select('id,username,avatar_url').eq('id', friendId).single();
-        if(!friend) continue;
-        box.innerHTML += `
-        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
-            <div class="flex items-center gap-3">
-                <img src="${getAvatar(friend.avatar_url)}" class="w-11 h-11 rounded-full object-cover border">
-                <div class="font-semibold">${escapeHTML(friend.username)}</div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="openChat('${friend.id}')" class="icon bg-indigo-600 text-white" title="Nhắn tin">💬</button>
-            </div>
-        </div>`;
-    }
-}
+        div.innerHTML = `  
+            <div class="max-w-md px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}">  
+                ${msg.content ? `<span>${escapeHtml(msg.content)}</span>` : ''}  
+                ${mediaHTML}  
+            </div>  
+            <span class="text-[10px] text-gray-400 mt-1">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>  
+        `;  
+        container.appendChild(div);  
+        container.scrollTop = container.scrollHeight;  
+    }  
 
-async function removeFriend(friendId){
-    if(!confirm("Bạn có chắc muốn xóa bạn này?")) return;
-    await supabaseClient.from('friend_requests').delete().or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${friendId}
+    // Lắng nghe tin nhắn Realtime  
+    function subscribeToMessages() {  
+        if (currentSubscription) {  
+            supabaseClient.removeChannel(currentSubscription);  
+        }  
+
+        currentSubscription = supabaseClient  
+            .channel('public:messages')  
+            .on('postgres_changes', {   
+                event: 'INSERT',   
+                schema: 'public',   
+                table: 'messages'   
+            }, payload => {  
+                const msg = payload.new;  
+                if (  
+                    activeReceiver &&   
+                    ((msg.sender_id === currentUser.id && msg.receiver_id === activeReceiver.id) ||  
+                     (msg.sender_id === activeReceiver.id && msg.receiver_id === currentUser.id))  
+                ) {  
+                    appendMessage(msg);  
+                }  
+            })  
+            .subscribe();  
+    }  
+
+    // Xem trước tên file  
+    function previewMedia() {  
+        const fileInput = document.getElementById('media-file');  
+        selectedFile = fileInput.files[0];  
+        if (selectedFile) {  
+            document.getElementById('file-name').innerText = selectedFile.name;  
+        }  
+    }  
+
+    // Gửi tin nhắn hoặc Ảnh/Video  
+    async function sendMessage() {  
+        const input = document.getElementById('message-input');  
+        const content = input.value.trim();  
+
+        if (!content && !selectedFile) return;  
+        if (!activeReceiver) return;  
+
+        let media_url = null;  
+        let media_type = null;  
+
+        if (selectedFile) {  
+            const fileExt = selectedFile.name.split('.').pop();  
+            const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;  
+            const filePath = `${currentUser.id}/${fileName}`;  
+
+            const { error: uploadError } = await supabaseClient.storage  
+                .from('chat-media')  
+                .upload(filePath, selectedFile);  
+
+            if (uploadError) {  
+                alert('Lỗi tải file lên: ' + uploadError.message);  
+                return;  
+            }  
+
+            const { data: publicUrlData } = supabaseClient.storage  
+                .from('chat-media')  
+                .getPublicUrl(filePath);  
+
+            media_url = publicUrlData.publicUrl;  
+            media_type = selectedFile.type.startsWith('image/') ? 'image' : 'video';  
+
+            selectedFile = null;  
+            document.getElementById('media-file').value = '';  
+            document.getElementById('file-name').innerText = '';  
+        }  
+
+        const { error } = await supabaseClient.from('messages').insert([  
+            {  
+                sender_id: currentUser.id,  
+                receiver_id: activeReceiver.id,  
+                content: content || null,  
+                media_url,  
+                media_type  
+            }  
+        ]);  
+
+        if (error) {  
+            alert('Lỗi gửi tin nhắn: ' + error.message);  
+        } else {  
+            input.value = '';  
+        }  
+    }  
+
+    function escapeHtml(text) {  
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");  
+    }  
+</script>
+
+</body>  
+</html>  
