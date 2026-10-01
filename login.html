@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zalo Web - Đăng nhập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-500 to-blue-700 h-screen flex items-center justify-center">
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-96 max-w-full mx-4">
+        <div class="text-center mb-6">
+            <div class="inline-block bg-blue-600 text-white font-bold text-2xl px-4 py-2 rounded-lg mb-2 shadow">ZALO</div>
+            <h1 class="text-xl font-bold text-gray-800" id="auth-title">Đăng nhập tài khoản</h1>
+        </div>
+        
+        <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm"></div>
+
+        <form id="auth-form" onsubmit="handleAuth(event)">
+            <div id="name-field" class="mb-4 hidden">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Tên hiển thị</label>
+                <input type="text" id="auth-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ví dụ: Nguyễn Văn A">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập</label>
+                <input type="text" id="auth-username" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập tên đăng nhập">
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                <input type="password" id="auth-password" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập mật khẩu">
+            </div>
+            <button type="submit" id="auth-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Đăng Nhập</button>
+        </form>
+
+        <div class="mt-4 text-center">
+            <button onclick="toggleAuthMode()" id="auth-switch" class="text-sm text-blue-600 hover:underline">Chưa có tài khoản? Đăng ký ngay</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let isSignUp = false;
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('auth-title').innerText = isSignUp ? 'Đăng ký tài khoản mới' : 'Đăng nhập tài khoản';
+            document.getElementById('auth-btn').innerText = isSignUp ? 'Đăng Ký' : 'Đăng Nhập';
+            document.getElementById('auth-switch').innerText = isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay';
+            document.getElementById('name-field').classList.toggle('hidden', !isSignUp);
+            document.getElementById('auth-error').classList.add('hidden');
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const displayName = document.getElementById('auth-name').value.trim();
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.classList.add('hidden');
+
+            try {
+                if (isSignUp) {
+                    if (!displayName) throw new Error('Vui lòng nhập tên hiển thị!');
+                    const { data: existing } = await supabaseClient.from('custom_users').select('*').eq('username', username).single();
+                    if (existing) throw new Error('Tên đăng nhập này đã được sử dụng!');
+
+                    const { error } = await supabaseClient.from('custom_users').insert({ username, display_name: displayName, password });
+                    if (error) throw error;
+
+                    alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                    toggleAuthMode();
+                } else {
+                    const { data, error } = await supabaseClient
+                        .from('custom_users').select('*')
+                        .eq('username', username).eq('password', password).single();
+
+                    if (error || !data) throw new Error('Sai tên đăng nhập hoặc mật khẩu!');
+
+                    localStorage.setItem('zalo_user', JSON.stringify(data));
+                    window.location.href = 'chats.html'; // Chuyển sang trang danh sách chat
+                }
+            } catch (err) {
+                errorDiv.innerText = err.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // Nếu đã đăng nhập thì đá thẳng sang trang danh sách chat
+        if (localStorage.getItem('zalo_user')) {
+            window.location.href = 'chats.html';
+        }
+    </script>
+</body>
+</html>
+
