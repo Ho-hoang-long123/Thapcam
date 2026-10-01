@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zalo Web - Phòng nhắn tin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden flex flex-col">
+
+    <!-- Header Chat Box -->
+    <div class="p-3 border-b flex items-center justify-between bg-white shadow-sm flex-shrink-0">
+        <div class="flex items-center space-x-3">
+            <button onclick="goBack()" class="text-gray-600 hover:text-blue-600 text-lg px-2"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold" id="current-chat-avatar">U</div>
+            <div>
+                <h3 class="font-bold text-gray-800" id="current-chat-name">Tên Người Nhận</h3>
+                <span class="text-xs text-green-500" id="current-chat-status">Đang hoạt động</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Container -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="message-container"></div>
+
+    <!-- Input Footer -->
+    <div class="p-3 border-t bg-white flex items-center space-x-2 flex-shrink-0">
+        <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm" onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const currentUser = JSON.parse(localStorage.getItem('zalo_user'));
+        const recipientId = sessionStorage.getItem('chat_recipient_id');
+        const recipientName = sessionStorage.getItem('chat_recipient_name');
+
+        if (!currentUser || !recipientName) {
+            window.location.href = 'chats.html';
+        }
+
+        const isGeneral = recipientId === 'general';
+        document.getElementById('current-chat-name').innerText = recipientName;
+        document.getElementById('current-chat-avatar').innerText = recipientName.charAt(0).toUpperCase();
+        document.getElementById('current-chat-status').innerText = isGeneral ? 'Phòng chung' : 'Trò chuyện riêng tư';
+
+        let messageSubscription = null;
+
+        async function loadMessages() {
+            const { data } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
+            const container = document.getElementById('message-container');
+            container.innerHTML = '';
+            
+            if (data) {
+                data.forEach(msg => {
+                    if (isGeneral) {
+                        if (!msg.receiver_id) appendMessageUI(msg);
+                    } else {
+                        const isBetweenUs = (msg.sender_id === currentUser.id && msg.receiver_id === recipientId) ||
+                                            (msg.sender_id === recipientId && msg.receiver_id === currentUser.id);
+                        if (isBetweenUs) appendMessageUI(msg);
+                    }
+                });
+            }
+        }
+
+        function appendMessageUI(msg) {
+            const container = document.getElementById('message-container');
+            const isMe = msg.sender_id === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `
+                <div class="max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none shadow-sm'}">
+                    ${!isMe ? `<div class="text-xs font-bold text-blue-500 mb-1">${escapeHtml(msg.sender_name)}</div>` : ''}
+                    <div>${escapeHtml(msg.content)}</div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            await supabaseClient.from('messages').insert({
+                sender_id: currentUser.id,
+                sender_name: currentUser.display_name,
+                content: content,
+                receiver_id: isGeneral ? null : recipientId
+            });
+
+            input.value = '';
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function goBack() {
+            window.location.href = 'chats.html';
+        }
+
+        function subscribeMessages() {
+            messageSubscription = supabaseClient
+                .channel('public:messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    const msg = payload.new;
+                    if (isGeneral && !msg.receiver_id) {
+                        appendMessageUI(msg);
+                    } else if (!isGeneral && (
+                        (msg.sender_id === currentUser.id && msg.receiver_id === recipientId) ||
+                        (msg.sender_id === recipientId && msg.receiver_id === currentUser.id)
+                    )) {
+                        appendMessageUI(msg);
+                    }
+                })
+                .subscribe();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        loadMessages();
+        subscribeMessages();
+    </script>
+</body>
+</html>
