@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zalo Web (Supabase Integration)</title>
+    <title>Zalo Web - Supabase Integration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase JS Client -->
@@ -30,9 +30,13 @@
             <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm"></div>
 
             <form id="auth-form" onsubmit="handleAuth(event)">
+                <div id="name-field" class="mb-4 hidden">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tên hiển thị của bạn</label>
+                    <input type="text" id="auth-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ví dụ: Hoàng Nam">
+                </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                    <input type="email" id="auth-email" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập email của bạn">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập</label>
+                    <input type="text" id="auth-username" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập tên đăng nhập của bạn">
                 </div>
                 <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
@@ -53,16 +57,18 @@
         <div class="w-16 bg-blue-600 flex flex-col items-center py-4 justify-between text-white flex-shrink-0">
             <div class="flex flex-col items-center space-y-6">
                 <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg shadow" id="user-initial">Z</div>
-                <button class="w-10 h-10 rounded-lg hover:bg-blue-700 flex items-center justify-center text-xl bg-blue-700"><i class="fa-solid fa-message"></i></button>
-                <button class="w-10 h-10 rounded-lg hover:bg-blue-700 flex items-center justify-center text-xl text-blue-200"><i class="fa-solid fa-address-book"></i></button>
+                <button class="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center text-xl shadow"><i class="fa-solid fa-message"></i></button>
             </div>
             <div>
                 <button onclick="logout()" title="Đăng xuất" class="w-10 h-10 rounded-lg hover:bg-red-600 flex items-center justify-center text-xl text-blue-200 hover:text-white transition"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
 
-        <!-- Sidebar Chats & Contacts -->
+        <!-- Sidebar Chats & Users List -->
         <div class="w-80 bg-white border-r flex flex-col flex-shrink-0">
+            <div class="p-3 border-b flex items-center justify-between">
+                <h2 class="font-bold text-gray-800 text-base truncate" id="my-profile-name">Đang tải...</h2>
+            </div>
             <div class="p-3 border-b flex items-center space-x-2">
                 <div class="flex-1 bg-gray-100 flex items-center px-3 py-1.5 rounded-lg">
                     <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
@@ -70,12 +76,12 @@
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto" id="user-list">
-                <!-- Danh sách người dùng khác sẽ hiện ở đây -->
+                <!-- Danh sách phòng chat và bạn bè sẽ render ở đây -->
             </div>
         </div>
 
         <!-- Chat Area -->
-        <div class="flex-1 flex flex-col bg-white" id="chat-area">
+        <div class="flex-1 flex flex-col bg-white">
             <div class="flex-1 flex items-center justify-center text-gray-400 bg-gray-50" id="no-chat-selected">
                 <div class="text-center">
                     <i class="fa-regular fa-comments text-5xl mb-3"></i>
@@ -83,7 +89,7 @@
                 </div>
             </div>
 
-            <!-- Active Chat Box (ẩn mặc định) -->
+            <!-- Active Chat Box -->
             <div id="active-chat" class="hidden flex-1 flex flex-col h-full">
                 <!-- Chat Header -->
                 <div class="p-3 border-b flex items-center justify-between bg-white shadow-sm">
@@ -91,7 +97,7 @@
                         <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold" id="current-chat-avatar">U</div>
                         <div>
                             <h3 class="font-bold text-gray-800" id="current-chat-name">Tên Người Nhận</h3>
-                            <span class="text-xs text-green-500">Đang hoạt động</span>
+                            <span class="text-xs text-green-500" id="current-chat-status">Đang hoạt động</span>
                         </div>
                     </div>
                 </div>
@@ -119,7 +125,8 @@
 
         let isSignUp = false;
         let currentUser = null;
-        let currentRecipient = null;
+        let currentDisplayName = '';
+        let currentRecipient = null; // null nếu là phòng chung, hoặc {id, name} nếu chat riêng
         let messageSubscription = null;
 
         function toggleAuthMode() {
@@ -127,21 +134,36 @@
             document.getElementById('auth-title').innerText = isSignUp ? 'Đăng ký tài khoản mới' : 'Đăng nhập tài khoản';
             document.getElementById('auth-btn').innerText = isSignUp ? 'Đăng Ký' : 'Đăng Nhập';
             document.getElementById('auth-switch').innerText = isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay';
+            document.getElementById('name-field').classList.toggle('hidden', !isSignUp);
             document.getElementById('auth-error').classList.add('hidden');
         }
 
         async function handleAuth(e) {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value;
+            const rawUser = document.getElementById('auth-username').value.trim();
+            const email = rawUser.includes('@') ? rawUser : `${rawUser.toLowerCase().replace(/\s+/g, '')}@zalo.app`;
             const password = document.getElementById('auth-password').value;
+            const displayName = document.getElementById('auth-name').value.trim();
             const errorDiv = document.getElementById('auth-error');
             errorDiv.classList.add('hidden');
 
             try {
                 if (isSignUp) {
-                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                    if (!displayName) throw new Error('Vui lòng nhập tên hiển thị!');
+                    const { data, error } = await supabaseClient.auth.signUp({ 
+                        email, 
+                        password,
+                        options: { data: { display_name: displayName } }
+                    });
                     if (error) throw error;
-                    alert('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
+                    
+                    if (data.user) {
+                        await supabaseClient.from('profiles').upsert({
+                            id: data.user.id,
+                            display_name: displayName
+                        });
+                    }
+                    alert('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
                     toggleAuthMode();
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -158,10 +180,27 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 currentUser = session.user;
+                
+                // Lấy tên hiển thị từ bảng profiles hoặc metadata
+                let { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('display_name')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (!profile && currentUser.user_metadata?.display_name) {
+                    currentDisplayName = currentUser.user_metadata.display_name;
+                    await supabaseClient.from('profiles').upsert({ id: currentUser.id, display_name: currentDisplayName });
+                } else {
+                    currentDisplayName = profile ? profile.display_name : currentUser.email.split('@')[0];
+                }
+
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('user-initial').innerText = currentUser.email.charAt(0).toUpperCase();
-                loadUsers();
+                document.getElementById('user-initial').innerText = currentDisplayName.charAt(0).toUpperCase();
+                document.getElementById('my-profile-name').innerText = currentDisplayName;
+                
+                loadUsersAndRooms();
             } else {
                 document.getElementById('auth-container').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('hidden');
@@ -173,30 +212,49 @@
             location.reload();
         }
 
-        // Lấy danh sách tất cả user đã đăng ký để chat
-        async function loadUsers() {
-            // Lấy danh sách từ bảng auth thông qua query profiles (hoặc nếu chưa có bảng profiles, demo hiển thị qua bảng messages hoặc tạo tự động)
-            // Đơn giản hóa: Dùng chung một bảng messages để gom các user đã từng tương tác hoặc tạo profile ảo.
-            // Để hiển thị nhanh, ở đây ta gọi lấy thông tin người dùng hiện tại và gợi ý chat.
+        async function loadUsersAndRooms() {
             const userListEl = document.getElementById('user-list');
-            userListEl.innerHTML = `
-                <div class="p-3 text-sm text-gray-500 font-bold border-b bg-gray-50">Danh sách hệ thống</div>
-                <div onclick="selectGlobalChat()" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
-                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3">G</div>
+            
+            let html = `
+                <div onclick="selectChat(null, 'Phòng Chat Chung')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b bg-blue-50">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 shadow"><i class="fa-solid fa-users"></i></div>
                     <div>
                         <h4 class="font-bold text-gray-800 text-sm">Phòng Chat Chung</h4>
-                        <p class="text-xs text-gray-500">Mọi người cùng trò chuyện</p>
+                        <p class="text-xs text-gray-500">Trò chuyện với mọi người</p>
                     </div>
                 </div>
+                <div class="p-3 text-xs text-gray-400 font-bold uppercase bg-gray-50 border-b">Danh sách bạn bè</div>
             `;
+
+            const { data: profiles } = await supabaseClient.from('profiles').select('*');
+            
+            if (profiles) {
+                profiles.forEach(p => {
+                    if (p.id !== currentUser.id) {
+                        html += `
+                            <div onclick="selectChat('${p.id}', '${escapeHtml(p.display_name)}')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
+                                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-3">${p.display_name.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-sm">${escapeHtml(p.display_name)}</h4>
+                                    <p class="text-xs text-green-500">Nhấn để nhắn tin riêng</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            userListEl.innerHTML = html;
         }
 
-        function selectGlobalChat() {
-            currentRecipient = { id: 'global', email: 'Phòng Chat Chung' };
+        function selectChat(recipientId, recipientName) {
+            currentRecipient = recipientId ? { id: recipientId, name: recipientName } : null;
+            
             document.getElementById('no-chat-selected').classList.add('hidden');
             document.getElementById('active-chat').classList.remove('hidden');
-            document.getElementById('current-chat-name').innerText = "Phòng Chat Chung";
-            document.getElementById('current-chat-avatar').innerText = "G";
+            document.getElementById('current-chat-name').innerText = recipientName;
+            document.getElementById('current-chat-avatar').innerText = recipientName.charAt(0).toUpperCase();
+            document.getElementById('current-chat-status').innerText = recipientId ? 'Trò chuyện riêng tư' : 'Phòng chung';
+
             loadMessages();
             subscribeMessages();
         }
@@ -209,9 +267,16 @@
 
             const container = document.getElementById('message-container');
             container.innerHTML = '';
+            
             if (data) {
                 data.forEach(msg => {
-                    appendMessageUI(msg);
+                    if (!currentRecipient) {
+                        if (!msg.receiver_id) appendMessageUI(msg);
+                    } else {
+                        const isBetweenUs = (msg.sender_id === currentUser.id && msg.receiver_id === currentRecipient.id) ||
+                                            (msg.sender_id === currentRecipient.id && msg.receiver_id === currentUser.id);
+                        if (isBetweenUs) appendMessageUI(msg);
+                    }
                 });
             }
         }
@@ -223,7 +288,7 @@
             div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
             div.innerHTML = `
                 <div class="max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none shadow-sm'}">
-                    ${!isMe ? `<div class="text-xs font-bold text-blue-500 mb-1">${msg.sender_email}</div>` : ''}
+                    ${!isMe ? `<div class="text-xs font-bold text-blue-500 mb-1">${escapeHtml(msg.sender_name)}</div>` : ''}
                     <div>${escapeHtml(msg.content)}</div>
                 </div>
             `;
@@ -236,16 +301,20 @@
             const content = input.value.trim();
             if (!content) return;
 
-            const { error } = await supabaseClient.from('messages').insert({
+            const messageData = {
                 sender_id: currentUser.id,
-                sender_email: currentUser.email,
-                content: content
-            });
+                sender_name: currentDisplayName,
+                content: content,
+                receiver_id: currentRecipient ? currentRecipient.id : null,
+                group_id: null
+            };
+
+            const { error } = await supabaseClient.from('messages').insert(messageData);
 
             if (!error) {
                 input.value = '';
             } else {
-                alert('Lỗi gửi tin nhắn: ' + error.message);
+                alert('Lỗi gửi tin: ' + error.message);
             }
         }
 
@@ -259,17 +328,26 @@
             messageSubscription = supabaseClient
                 .channel('public:messages')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                    appendMessageUI(payload.new);
+                    const msg = payload.new;
+                    if (!currentRecipient && !msg.receiver_id) {
+                        appendMessageUI(msg);
+                    } else if (currentRecipient && (
+                        (msg.sender_id === currentUser.id && msg.receiver_id === currentRecipient.id) ||
+                        (msg.sender_id === currentRecipient.id && msg.receiver_id === currentUser.id)
+                    )) {
+                        appendMessageUI(msg);
+                    }
                 })
                 .subscribe();
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Khởi động kiểm tra session
         checkUserSession();
     </script>
 </body>
-</html>
+    </html>
+    
