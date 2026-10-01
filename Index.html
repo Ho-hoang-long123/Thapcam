@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zalo Web - Không giới hạn tài khoản</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+        body { font-family: 'Roboto', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+
+    <!-- PHẦN 1: TRANG ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <div id="view-login" class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-500 to-blue-700">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-96 max-w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="inline-block bg-blue-600 text-white font-bold text-2xl px-4 py-2 rounded-lg mb-2 shadow">ZALO</div>
+                <h1 class="text-xl font-bold text-gray-800" id="auth-title">Đăng nhập tài khoản</h1>
+            </div>
+            
+            <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm"></div>
+
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div id="name-field" class="mb-4 hidden">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tên hiển thị</label>
+                    <input type="text" id="auth-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ví dụ: Nguyễn Văn A">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập</label>
+                    <input type="text" id="auth-username" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập tên đăng nhập">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                    <input type="password" id="auth-password" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập mật khẩu">
+                </div>
+                <button type="submit" id="auth-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Đăng Nhập</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <button type="button" onclick="toggleAuthMode()" id="auth-switch" class="text-sm text-blue-600 hover:underline">Chưa có tài khoản? Đăng ký ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN 2: TRANG DANH SÁCH BẠN BÈ / PHÒNG CHAT -->
+    <div id="view-chats" class="hidden flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="w-16 bg-blue-600 flex flex-col items-center py-4 justify-between text-white flex-shrink-0">
+            <div class="flex flex-col items-center space-y-6">
+                <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg shadow" id="user-initial">Z</div>
+                <button class="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center text-xl shadow"><i class="fa-solid fa-message"></i></button>
+            </div>
+            <div>
+                <button onclick="logout()" title="Đăng xuất" class="w-10 h-10 rounded-lg hover:bg-red-600 flex items-center justify-center text-xl text-blue-200 hover:text-white transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+
+        <!-- Sidebar Chats List -->
+        <div class="w-full md:w-80 bg-white border-r flex flex-col flex-shrink-0">
+            <div class="p-3 border-b flex items-center justify-between">
+                <h2 class="font-bold text-gray-800 text-base truncate" id="my-profile-name">Đang tải...</h2>
+            </div>
+            <div class="p-3 border-b flex items-center space-x-2">
+                <div class="flex-1 bg-gray-100 flex items-center px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
+                    <input type="text" placeholder="Tìm kiếm" class="bg-transparent text-sm focus:outline-none w-full">
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto" id="user-list"></div>
+        </div>
+
+        <!-- Màn hình chờ khi chưa chọn chat (Chỉ hiện trên máy tính màn hình rộng) -->
+        <div class="hidden md:flex flex-1 items-center justify-center text-gray-400 bg-gray-50">
+            <div class="text-center">
+                <i class="fa-regular fa-comments text-5xl mb-3"></i>
+                <p>Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN 3: TRANG NHẮN TIN CHI TIẾT (Giao diện riêng khi bấm vào một chat trên mobile/desktop) -->
+    <div id="view-room" class="hidden flex flex-col h-screen bg-white">
+        <!-- Header Chat Box -->
+        <div class="p-3 border-b flex items-center justify-between bg-white shadow-sm flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <button onclick="backToChats()" class="text-gray-600 hover:text-blue-600 text-lg px-2"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold" id="current-chat-avatar">U</div>
+                <div>
+                    <h3 class="font-bold text-gray-800" id="current-chat-name">Tên Người Nhận</h3>
+                    <span class="text-xs text-green-500" id="current-chat-status">Đang hoạt động</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Container -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="message-container"></div>
+
+        <!-- Input Footer -->
+        <div class="p-3 border-t bg-white flex items-center space-x-2 flex-shrink-0">
+            <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm" onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let isSignUp = false;
+        let currentUser = null;
+        let currentRecipient = null;
+        let messageSubscription = null;
+
+        // Chuyển qua lại giữa các view (Trang)
+        function switchView(viewName) {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-chats').classList.add('hidden');
+            document.getElementById('view-room').classList.add('hidden');
+
+            if (viewName === 'login') document.getElementById('view-login').classList.remove('hidden');
+            if (viewName === 'chats') document.getElementById('view-chats').classList.remove('hidden');
+            if (viewName === 'room') document.getElementById('view-room').classList.remove('hidden');
+        }
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('auth-title').innerText = isSignUp ? 'Đăng ký tài khoản mới' : 'Đăng nhập tài khoản';
+            document.getElementById('auth-btn').innerText = isSignUp ? 'Đăng Ký' : 'Đăng Nhập';
+            document.getElementById('auth-switch').innerText = isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay';
+            document.getElementById('name-field').classList.toggle('hidden', !isSignUp);
+            document.getElementById('auth-error').classList.add('hidden');
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const displayName = document.getElementById('auth-name').value.trim();
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.classList.add('hidden');
+
+            try {
+                if (isSignUp) {
+                    if (!displayName) throw new Error('Vui lòng nhập tên hiển thị!');
+                    
+                    const { data: existing } = await supabaseClient.from('custom_users').select('*').eq('username', username).single();
+                    if (existing) throw new Error('Tên đăng nhập này đã được sử dụng!');
+
+                    const { error } = await supabaseClient.from('custom_users').insert({ username, display_name: displayName, password });
+                    if (error) throw error;
+
+                    alert('Đăng ký thành công! Hãy đăng nhập ngay.');
+                    toggleAuthMode();
+                } else {
+                    const { data, error } = await supabaseClient
+                        .from('custom_users').select('*')
+                        .eq('username', username).eq('password', password).single();
+
+                    if (error || !data) throw new Error('Sai tên đăng nhập hoặc mật khẩu!');
+
+                    currentUser = data;
+                    localStorage.setItem('zalo_user', JSON.stringify(currentUser));
+                    checkUserSession();
+                }
+            } catch (err) {
+                errorDiv.innerText = err.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function checkUserSession() {
+            const savedUser = localStorage.getItem('zalo_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('user-initial').innerText = currentUser.display_name.charAt(0).toUpperCase();
+                document.getElementById('my-profile-name').innerText = currentUser.display_name;
+                switchView('chats');
+                loadUsersAndRooms();
+            } else {
+                switchView('login');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('zalo_user');
+            currentUser = null;
+            switchView('login');
+        }
+
+        async function loadUsersAndRooms() {
+            const userListEl = document.getElementById('user-list');
+            
+            let html = `
+                <div onclick="selectChat(null, 'Phòng Chat Chung')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b bg-blue-50">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 shadow"><i class="fa-solid fa-users"></i></div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Phòng Chat Chung</h4>
+                        <p class="text-xs text-gray-500">Trò chuyện với mọi người</p>
+                    </div>
+                </div>
+                <div class="p-3 text-xs text-gray-400 font-bold uppercase bg-gray-50 border-b">Danh sách bạn bè</div>
+            `;
+
+            const { data: users } = await supabaseClient.from('custom_users').select('*');
+            
+            if (users) {
+                users.forEach(u => {
+                    if (u.id !== currentUser.id) {
+                        html += `
+                            <div onclick="selectChat('${u.id}', '${escapeHtml(u.display_name)}')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
+                                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-3">${u.display_name.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-sm">${escapeHtml(u.display_name)}</h4>
+                                    <p class="text-xs text-green-500">Nhấn để nhắn tin riêng</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            userListEl.innerHTML = html;
+        }
+
+        function selectChat(recipientId, recipientName) {
+            currentRecipient = recipientId ? { id: recipientId, name: recipientName } : null;
+            
+            document.getElementById('current-chat-name').innerText = recipientName;
+            document.getElementById('current-chat-avatar').innerText = recipientName.charAt(0).toUpperCase();
+            document.getElementById('current-chat-status').innerText = recipientId ? 'Trò chuyện riêng tư' : 'Phòng chung';
+
+            switchView('room'); // Chuyển sang "trang" nhắn tin chi tiết
+            loadMessages();
+            subscribeMessages();
+        }
+
+        function backToChats() {
+            if (messageSubscription) supabaseClient.removeChannel(messageSubscription);
+            switchView('chats'); // Quay lại trang danh sách
+        }
+
+        async function loadMessages() {
+            const { data } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
+            const container = document.getElementById('message-container');
+            container.innerHTML = '';
+            
+            if (data) {
+                data.forEach(msg => {
+                    if (!currentRecipient) {
+                        if (!msg.receiver_id) appendMessageUI(msg);
+                    } else {
+                        const isBetweenUs = (msg.sender_id === currentUser.id && msg.receiver_id === currentRecipient.id) ||
+                                            (msg.sender_id === currentRecipient.id && msg.receiver_id === currentUser.id);
+                        if (isBetweenUs) appendMessageUI(msg);
+                    }
+                });
+            }
+        }
+
+        function appendMessageUI(msg) {
+            const container = document.getElementById('message-container');
+            const isMe = msg.sender_id === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `
+                <div class="max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none shadow-sm'}">
+                    ${!isMe ? `<div class="text-xs font-bold text-blue-500 mb-1">${escapeHtml(msg.sender_name)}</div>` : ''}
+                    <div>${escapeHtml(msg.content)}</div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            await supabaseClient.from('messages').insert({
+                sender_id: currentUser.id,
+                sender_name: currentUser.display_name,
+                content: content,
+                receiver_id: currentRecipient ? currentRecipient.id : null
+            });
+
+            input.value = '';
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function subscribeMessages() {
+            if (messageSubscription) supabaseClient.removeChannel(messageSubscription);
+            
+            messageSubscription = supabaseClient
+                .channel('public:messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    const msg = payload.new;
+                    if (!currentRecipient && !msg.receiver_id) {
+                        appendMessageUI(msg);
+                    } else if (currentRecipient && (
+                        (msg.sender_id === currentUser.id && msg.receiver_id === currentRecipient.id) ||
+                        (msg.sender_id === currentRecipient.id && msg.receiver_id === currentUser.id)
+                    )) {
+                        appendMessageUI(msg);
+                    }
+                })
+                .subscribe();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Khởi chạy kiểm tra phiên đăng nhập khi mở web
+        checkUserSession();
+    </script>
+</body>
+                                                                                                                                                                  </html>
+                                                                                                                                                                  
