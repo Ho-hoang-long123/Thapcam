@@ -3,268 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Game - 5s Loading</title>
-    <!-- Thư viện Supabase JS -->
+    <title>Zalo Web (Supabase Integration)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            color: #fff;
-            position: relative;
-        }
-
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1;
-        }
-
-        /* --- MÀN HÌNH LOADING 5 GIÂY --- */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #0b0919;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.6s ease;
-        }
-
-        .loader-spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top: 5px solid #00dbde;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        #loading-text {
-            font-size: 1.2rem;
-            color: #00dbde;
-            letter-spacing: 1px;
-        }
-
-        /* --- MENU CHÍNH --- */
-        .menu-container {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 40px 60px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 1s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #00dbde, #fc00ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(252, 0, 255, 0.3);
-            letter-spacing: 2px;
-        }
-
-        p.subtitle {
-            font-size: 1rem;
-            color: #ccc;
-            margin-bottom: 30px;
-        }
-
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 220px;
-            margin: 0 auto;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #fff;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .btn:hover {
-            background: linear-gradient(45deg, #00dbde, #fc00ff);
-            border-color: transparent;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(252, 0, 255, 0.4);
-        }
-
-        /* --- PHẦN ADMIN UPLOAD NỀN (XÓA ĐI NẾU KHÔNG CẦN) --- */
-        .admin-panel {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            font-size: 0.9rem;
-        }
-        .admin-panel input {
-            color: #fff;
-            margin-top: 5px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+        body { font-family: 'Roboto', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 h-screen overflow-hidden">
 
-    <!-- Màn hình Loading -->
-    <div id="loading-screen">
-        <div class="loader-spinner"></div>
-        <div id="loading-text">Đang tải game... 0%</div>
-    </div>
+    <!-- Auth Container -->
+    <div id="auth-container" class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-500 to-blue-700">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-96 max-w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="inline-block bg-blue-600 text-white font-bold text-2xl px-4 py-2 rounded-lg mb-2 shadow">ZALO</div>
+                <h1 class="text-xl font-bold text-gray-800" id="auth-title">Đăng nhập tài khoản</h1>
+            </div>
+            
+            <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm"></div>
 
-    <!-- Lớp phủ nền -->
-    <div class="overlay"></div>
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="auth-email" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập email của bạn">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                    <input type="password" id="auth-password" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập mật khẩu">
+                </div>
+                <button type="submit" id="auth-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Đăng Nhập</button>
+            </form>
 
-    <!-- Màn hình Menu chính -->
-    <div class="menu-container" id="main-menu">
-        <h1>GAME CỦA TÔI</h1>
-        <p class="subtitle">HTML5 Web Game Project</p>
-        <div class="menu-buttons">
-            <button class="btn" onclick="startGame()">Chơi Ngay</button>
-            <button class="btn" onclick="openSettings()">Cài Đặt</button>
-            <button class="btn" onclick="openCredits()">Thông Tin</button>
+            <div class="mt-4 text-center">
+                <button onclick="toggleAuthMode()" id="auth-switch" class="text-sm text-blue-600 hover:underline">Chưa có tài khoản? Đăng ký ngay</button>
+            </div>
         </div>
     </div>
 
-    <!-- NÚT UPLOAD ẢNH NỀN SUPABASE -->
-    <div class="admin-panel">
-        <label>Đổi ảnh nền game (Supabase):</label><br>
-        <input type="file" id="bgInput" accept="image/*" onchange="uploadBackground(this)">
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="w-16 bg-blue-600 flex flex-col items-center py-4 justify-between text-white flex-shrink-0">
+            <div class="flex flex-col items-center space-y-6">
+                <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg shadow" id="user-initial">Z</div>
+                <button class="w-10 h-10 rounded-lg hover:bg-blue-700 flex items-center justify-center text-xl bg-blue-700"><i class="fa-solid fa-message"></i></button>
+                <button class="w-10 h-10 rounded-lg hover:bg-blue-700 flex items-center justify-center text-xl text-blue-200"><i class="fa-solid fa-address-book"></i></button>
+            </div>
+            <div>
+                <button onclick="logout()" title="Đăng xuất" class="w-10 h-10 rounded-lg hover:bg-red-600 flex items-center justify-center text-xl text-blue-200 hover:text-white transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+
+        <!-- Sidebar Chats & Contacts -->
+        <div class="w-80 bg-white border-r flex flex-col flex-shrink-0">
+            <div class="p-3 border-b flex items-center space-x-2">
+                <div class="flex-1 bg-gray-100 flex items-center px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
+                    <input type="text" placeholder="Tìm kiếm" class="bg-transparent text-sm focus:outline-none w-full">
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto" id="user-list">
+                <!-- Danh sách người dùng khác sẽ hiện ở đây -->
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="flex-1 flex flex-col bg-white" id="chat-area">
+            <div class="flex-1 flex items-center justify-center text-gray-400 bg-gray-50" id="no-chat-selected">
+                <div class="text-center">
+                    <i class="fa-regular fa-comments text-5xl mb-3"></i>
+                    <p>Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
+                </div>
+            </div>
+
+            <!-- Active Chat Box (ẩn mặc định) -->
+            <div id="active-chat" class="hidden flex-1 flex flex-col h-full">
+                <!-- Chat Header -->
+                <div class="p-3 border-b flex items-center justify-between bg-white shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold" id="current-chat-avatar">U</div>
+                        <div>
+                            <h3 class="font-bold text-gray-800" id="current-chat-name">Tên Người Nhận</h3>
+                            <span class="text-xs text-green-500">Đang hoạt động</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Body -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="message-container">
+                    <!-- Tin nhắn render ở đây -->
+                </div>
+
+                <!-- Chat Input Footer -->
+                <div class="p-3 border-t bg-white flex items-center space-x-2">
+                    <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm" onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Script kết nối Supabase và Xử lý logic -->
     <script>
-        // --- CẤU HÌNH SUPABASE ---
-        const SUPABASE_URL = 'ĐIỀN_SUPABASE_URL_VÀO_ĐÂY';
-        const SUPABASE_ANON_KEY = 'ĐIỀN_SUPABASE_ANON_KEY_VÀO_ĐÂY';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Load ảnh nền đã lưu từ trước (nếu có)
-        const savedBg = localStorage.getItem('game_custom_bg');
-        if (savedBg) {
-            document.body.style.backgroundImage = `url('${savedBg}')`;
+        let isSignUp = false;
+        let currentUser = null;
+        let currentRecipient = null;
+        let messageSubscription = null;
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('auth-title').innerText = isSignUp ? 'Đăng ký tài khoản mới' : 'Đăng nhập tài khoản';
+            document.getElementById('auth-btn').innerText = isSignUp ? 'Đăng Ký' : 'Đăng Nhập';
+            document.getElementById('auth-switch').innerText = isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay';
+            document.getElementById('auth-error').classList.add('hidden');
         }
 
-        // --- HÀM FAKE LOADING ĐÚNG 5 GIÂY (5000ms) ---
-        window.addEventListener('DOMContentLoaded', () => {
-            let currentPercent = 0;
-            const totalDuration = 5000; // 5 giây
-            const intervalTime = 50;    // Cập nhật mỗi 50ms cho mượt
-            const increment = 100 / (totalDuration / intervalTime); // Mỗi bước tăng bao nhiêu %
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.classList.add('hidden');
 
-            const loadingText = document.getElementById('loading-text');
-            const loadingScreen = document.getElementById('loading-screen');
-
-            const fakeLoadTimer = setInterval(() => {
-                currentPercent += increment;
-                
-                if (currentPercent >= 100) {
-                    currentPercent = 100;
-                    clearInterval(fakeLoadTimer);
-                    
-                    // Ẩn màn hình loading đi
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                    }, 600); // Khớp với thời gian transition CSS
+            try {
+                if (isSignUp) {
+                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                    if (error) throw error;
+                    alert('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
+                    toggleAuthMode();
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    checkUserSession();
                 }
-
-                loadingText.innerText = `Đang tải game... ${Math.floor(currentPercent)}%`;
-            }, intervalTime);
-        });
-
-        // Hàm upload ảnh nền lên Supabase Storage
-        async function uploadBackground(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            alert("Đang upload ảnh lên Supabase, chờ xíu...");
-
-            const fileName = `bg_${Date.now()}_${file.name}`;
-            
-            const { data, error } = await supabaseClient.storage
-                .from('game-assets')
-                .upload(fileName, file);
-
-            if (error) {
-                alert("Lỗi upload: " + error.message);
-                return;
+            } catch (err) {
+                errorDiv.innerText = err.message;
+                errorDiv.classList.remove('hidden');
             }
-
-            const { data: publicURLData } = supabaseClient.storage
-                .from('game-assets')
-                .getPublicUrl(fileName);
-
-            const imageUrl = publicURLData.publicUrl;
-
-            document.body.style.backgroundImage = `url('${imageUrl}')`;
-            localStorage.setItem('game_custom_bg', imageUrl);
-
-            alert("Đổi ảnh nền thành công! Giờ mày có thể xóa đoạn code .admin-panel đi được rồi.");
         }
 
-        function startGame() {
-            alert("Chuẩn bị chuyển vào màn hình chơi game!");
+        async function checkUserSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('user-initial').innerText = currentUser.email.charAt(0).toUpperCase();
+                loadUsers();
+            } else {
+                document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
         }
 
-        function openSettings() {
-            alert("Tính năng cài đặt đang phát triển!");
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
         }
 
-        function openCredits() {
-            alert("Được làm bởi bạn với HTML/CSS/JS & Supabase!");
+        // Lấy danh sách tất cả user đã đăng ký để chat
+        async function loadUsers() {
+            // Lấy danh sách từ bảng auth thông qua query profiles (hoặc nếu chưa có bảng profiles, demo hiển thị qua bảng messages hoặc tạo tự động)
+            // Đơn giản hóa: Dùng chung một bảng messages để gom các user đã từng tương tác hoặc tạo profile ảo.
+            // Để hiển thị nhanh, ở đây ta gọi lấy thông tin người dùng hiện tại và gợi ý chat.
+            const userListEl = document.getElementById('user-list');
+            userListEl.innerHTML = `
+                <div class="p-3 text-sm text-gray-500 font-bold border-b bg-gray-50">Danh sách hệ thống</div>
+                <div onclick="selectGlobalChat()" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3">G</div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Phòng Chat Chung</h4>
+                        <p class="text-xs text-gray-500">Mọi người cùng trò chuyện</p>
+                    </div>
+                </div>
+            `;
         }
+
+        function selectGlobalChat() {
+            currentRecipient = { id: 'global', email: 'Phòng Chat Chung' };
+            document.getElementById('no-chat-selected').classList.add('hidden');
+            document.getElementById('active-chat').classList.remove('hidden');
+            document.getElementById('current-chat-name').innerText = "Phòng Chat Chung";
+            document.getElementById('current-chat-avatar').innerText = "G";
+            loadMessages();
+            subscribeMessages();
+        }
+
+        async function loadMessages() {
+            const { data, error } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: true });
+
+            const container = document.getElementById('message-container');
+            container.innerHTML = '';
+            if (data) {
+                data.forEach(msg => {
+                    appendMessageUI(msg);
+                });
+            }
+        }
+
+        function appendMessageUI(msg) {
+            const container = document.getElementById('message-container');
+            const isMe = msg.sender_id === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `
+                <div class="max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none shadow-sm'}">
+                    ${!isMe ? `<div class="text-xs font-bold text-blue-500 mb-1">${msg.sender_email}</div>` : ''}
+                    <div>${escapeHtml(msg.content)}</div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const { error } = await supabaseClient.from('messages').insert({
+                sender_id: currentUser.id,
+                sender_email: currentUser.email,
+                content: content
+            });
+
+            if (!error) {
+                input.value = '';
+            } else {
+                alert('Lỗi gửi tin nhắn: ' + error.message);
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function subscribeMessages() {
+            if (messageSubscription) supabaseClient.removeChannel(messageSubscription);
+            
+            messageSubscription = supabaseClient
+                .channel('public:messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    appendMessageUI(payload.new);
+                })
+                .subscribe();
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Khởi động kiểm tra session
+        checkUserSession();
     </script>
 </body>
 </html>
