@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zalo Web - Không giới hạn tài khoản</title>
+    <title>Zalo Web - Kết bạn & Nhắn tin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -49,34 +49,61 @@
         </div>
     </div>
 
-    <!-- PHẦN 2: TRANG DANH SÁCH BẠN BÈ / PHÒNG CHAT -->
+    <!-- PHẦN 2: TRANG CHÍNH (DANH SÁCH CHAT & TÌM BẠN BÈ) -->
     <div id="view-chats" class="hidden flex h-screen">
         <!-- Sidebar Navigation -->
         <div class="w-16 bg-blue-600 flex flex-col items-center py-4 justify-between text-white flex-shrink-0">
             <div class="flex flex-col items-center space-y-6">
                 <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg shadow" id="user-initial">Z</div>
-                <button class="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center text-xl shadow"><i class="fa-solid fa-message"></i></button>
+                <button onclick="switchTab('chats')" id="tab-btn-chats" class="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center text-xl shadow transition" title="Tin nhắn"><i class="fa-solid fa-message"></i></button>
+                <button onclick="switchTab('friends')" id="tab-btn-friends" class="w-10 h-10 rounded-lg hover:bg-blue-700 flex items-center justify-center text-xl shadow transition text-blue-200" title="Tìm & Quản lý bạn bè"><i class="fa-solid fa-user-plus"></i></button>
             </div>
             <div>
                 <button onclick="logout()" title="Đăng xuất" class="w-10 h-10 rounded-lg hover:bg-red-600 flex items-center justify-center text-xl text-blue-200 hover:text-white transition"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
 
-        <!-- Sidebar Chats List -->
+        <!-- Sidebar Panel (Thay đổi tùy theo Tab đang chọn) -->
         <div class="w-full md:w-80 bg-white border-r flex flex-col flex-shrink-0">
             <div class="p-3 border-b flex items-center justify-between">
                 <h2 class="font-bold text-gray-800 text-base truncate" id="my-profile-name">Đang tải...</h2>
             </div>
-            <div class="p-3 border-b flex items-center space-x-2">
-                <div class="flex-1 bg-gray-100 flex items-center px-3 py-1.5 rounded-lg">
-                    <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
-                    <input type="text" placeholder="Tìm kiếm" class="bg-transparent text-sm focus:outline-none w-full">
+
+            <!-- TAB 1: DANH SÁCH TIN NHẮN -->
+            <div id="sidebar-chats-content" class="flex-1 flex flex-col overflow-hidden">
+                <div class="p-3 border-b flex items-center space-x-2">
+                    <div class="flex-1 bg-gray-100 flex items-center px-3 py-1.5 rounded-lg">
+                        <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
+                        <input type="text" placeholder="Tìm kiếm" class="bg-transparent text-sm focus:outline-none w-full">
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto" id="user-list"></div>
+            </div>
+
+            <!-- TAB 2: QUẢN LÝ BẠN BÈ & TÌM KIẾM -->
+            <div id="sidebar-friends-content" class="hidden flex-1 flex flex-col overflow-hidden">
+                <div class="p-3 border-b">
+                    <div class="flex bg-gray-100 items-center px-3 py-1.5 rounded-lg">
+                        <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
+                        <input type="text" id="search-user-input" placeholder="Nhập tên tài khoản cần tìm..." oninput="searchUsers(this.value)" class="bg-transparent text-sm focus:outline-none w-full">
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-4" id="friends-management-container">
+                    <!-- Lời mời kết bạn đến -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Lời mời kết bạn chờ duyệt</h4>
+                        <div id="friend-requests-list" class="space-y-2"></div>
+                    </div>
+                    <!-- Kết quả tìm kiếm người dùng khác -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Kết quả tìm kiếm / Gợi ý</h4>
+                        <div id="search-results-list" class="space-y-2"></div>
+                    </div>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto" id="user-list"></div>
         </div>
 
-        <!-- Màn hình chờ khi chưa chọn chat (Chỉ hiện trên máy tính màn hình rộng) -->
+        <!-- Màn hình chờ khi chưa chọn chat -->
         <div class="hidden md:flex flex-1 items-center justify-center text-gray-400 bg-gray-50">
             <div class="text-center">
                 <i class="fa-regular fa-comments text-5xl mb-3"></i>
@@ -85,9 +112,8 @@
         </div>
     </div>
 
-    <!-- PHẦN 3: TRANG NHẮN TIN CHI TIẾT (Giao diện riêng khi bấm vào một chat trên mobile/desktop) -->
+    <!-- PHẦN 3: TRANG NHẮN TIN CHI TIẾT (Dành cho Mobile / Giao diện chat) -->
     <div id="view-room" class="hidden flex flex-col h-screen bg-white">
-        <!-- Header Chat Box -->
         <div class="p-3 border-b flex items-center justify-between bg-white shadow-sm flex-shrink-0">
             <div class="flex items-center space-x-3">
                 <button onclick="backToChats()" class="text-gray-600 hover:text-blue-600 text-lg px-2"><i class="fa-solid fa-arrow-left"></i></button>
@@ -99,10 +125,8 @@
             </div>
         </div>
 
-        <!-- Message Container -->
         <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="message-container"></div>
 
-        <!-- Input Footer -->
         <div class="p-3 border-t bg-white flex items-center space-x-2 flex-shrink-0">
             <input type="text" id="message-input" placeholder="Nhập tin nhắn..." class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm" onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-paper-plane"></i></button>
@@ -111,7 +135,7 @@
 
     <script>
         const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -120,7 +144,6 @@
         let currentRecipient = null;
         let messageSubscription = null;
 
-        // Chuyển qua lại giữa các view (Trang)
         function switchView(viewName) {
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-chats').classList.add('hidden');
@@ -129,6 +152,32 @@
             if (viewName === 'login') document.getElementById('view-login').classList.remove('hidden');
             if (viewName === 'chats') document.getElementById('view-chats').classList.remove('hidden');
             if (viewName === 'room') document.getElementById('view-room').classList.remove('hidden');
+        }
+
+        function switchTab(tabName) {
+            const chatsTab = document.getElementById('sidebar-chats-content');
+            const friendsTab = document.getElementById('sidebar-friends-content');
+            const btnChats = document.getElementById('tab-btn-chats');
+            const btnFriends = document.getElementById('tab-btn-friends');
+
+            if (tabName === 'chats') {
+                chatsTab.classList.remove('hidden');
+                friendsTab.classList.add('hidden');
+                btnChats.classList.add('bg-blue-700', 'text-white');
+                btnChats.classList.remove('text-blue-200');
+                btnFriends.classList.remove('bg-blue-700', 'text-white');
+                btnFriends.classList.add('text-blue-200');
+                loadFriendsAndRooms();
+            } else {
+                chatsTab.classList.add('hidden');
+                friendsTab.classList.remove('hidden');
+                btnFriends.classList.add('bg-blue-700', 'text-white');
+                btnFriends.classList.remove('text-blue-200');
+                btnChats.classList.remove('bg-blue-700', 'text-white');
+                btnChats.classList.add('text-blue-200');
+                loadFriendRequests();
+                searchUsers('');
+            }
         }
 
         function toggleAuthMode() {
@@ -151,7 +200,6 @@
             try {
                 if (isSignUp) {
                     if (!displayName) throw new Error('Vui lòng nhập tên hiển thị!');
-                    
                     const { data: existing } = await supabaseClient.from('custom_users').select('*').eq('username', username).single();
                     if (existing) throw new Error('Tên đăng nhập này đã được sử dụng!');
 
@@ -184,7 +232,7 @@
                 document.getElementById('user-initial').innerText = currentUser.display_name.charAt(0).toUpperCase();
                 document.getElementById('my-profile-name').innerText = currentUser.display_name;
                 switchView('chats');
-                loadUsersAndRooms();
+                switchTab('chats');
             } else {
                 switchView('login');
             }
@@ -196,7 +244,8 @@
             switchView('login');
         }
 
-        async function loadUsersAndRooms() {
+        // Tải danh sách phòng chung và bạn bè đã kết bạn
+        async function loadFriendsAndRooms() {
             const userListEl = document.getElementById('user-list');
             
             let html = `
@@ -207,125 +256,102 @@
                         <p class="text-xs text-gray-500">Trò chuyện với mọi người</p>
                     </div>
                 </div>
-                <div class="p-3 text-xs text-gray-400 font-bold uppercase bg-gray-50 border-b">Danh sách bạn bè</div>
+                <div class="p-3 text-xs text-gray-400 font-bold uppercase bg-gray-50 border-b">Bạn bè của tôi</div>
             `;
 
-            const { data: users } = await supabaseClient.from('custom_users').select('*');
-            
-            if (users) {
-                users.forEach(u => {
-                    if (u.id !== currentUser.id) {
+            // Lấy danh sách bạn bè đã chấp nhận
+            const { data: relations } = await supabaseClient
+                .from('friend_requests')
+                .select('*')
+                .eq('status', 'accepted')
+                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+
+            const friendIds = [];
+            if (relations) {
+                relations.forEach(r => {
+                    friendIds.push(r.sender_id === currentUser.id ? r.receiver_id : r.sender_id);
+                });
+            }
+
+            if (friendIds.length > 0) {
+                const { data: friends } = await supabaseClient.from('custom_users').select('*').in('id', friendIds);
+                if (friends) {
+                    friends.forEach(f => {
                         html += `
-                            <div onclick="selectChat('${u.id}', '${escapeHtml(u.display_name)}')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
-                                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-3">${u.display_name.charAt(0).toUpperCase()}</div>
+                            <div onclick="selectChat('${f.id}', '${escapeHtml(f.display_name)}')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
+                                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-3">${f.display_name.charAt(0).toUpperCase()}</div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800 text-sm">${escapeHtml(u.display_name)}</h4>
-                                    <p class="text-xs text-green-500">Nhấn để nhắn tin riêng</p>
+                                    <h4 class="font-bold text-gray-800 text-sm">${escapeHtml(f.display_name)}</h4>
+                                    <p class="text-xs text-green-500">Đang hoạt động</p>
                                 </div>
                             </div>
                         `;
-                    }
-                });
+                    });
+                }
+            } else {
+                html += `<div class="p-4 text-center text-xs text-gray-400">Chưa có bạn bè nào. Hãy sang tab kết bạn để tìm kiếm!</div>`;
             }
+
             userListEl.innerHTML = html;
         }
 
-        function selectChat(recipientId, recipientName) {
-            currentRecipient = recipientId ? { id: recipientId, name: recipientName } : null;
-            
-            document.getElementById('current-chat-name').innerText = recipientName;
-            document.getElementById('current-chat-avatar').innerText = recipientName.charAt(0).toUpperCase();
-            document.getElementById('current-chat-status').innerText = recipientId ? 'Trò chuyện riêng tư' : 'Phòng chung';
+        // Tải danh sách lời mời kết bạn được gửi đến
+        async function loadFriendRequests() {
+            const reqListEl = document.getElementById('friend-requests-list');
+            const { data: requests } = await supabaseClient
+                .from('friend_requests')
+                .select('id, sender_id')
+                .eq('receiver_id', currentUser.id)
+                .eq('status', 'pending');
 
-            switchView('room'); // Chuyển sang "trang" nhắn tin chi tiết
-            loadMessages();
-            subscribeMessages();
-        }
-
-        function backToChats() {
-            if (messageSubscription) supabaseClient.removeChannel(messageSubscription);
-            switchView('chats'); // Quay lại trang danh sách
-        }
-
-        async function loadMessages() {
-            const { data } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
-            const container = document.getElementById('message-container');
-            container.innerHTML = '';
-            
-            if (data) {
-                data.forEach(msg => {
-                    if (!currentRecipient) {
-                        if (!msg.receiver_id) appendMessageUI(msg);
-                    } else {
-                        const isBetweenUs = (msg.sender_id === currentUser.id && msg.receiver_id === currentRecipient.id) ||
-                                            (msg.sender_id === currentRecipient.id && msg.receiver_id === currentUser.id);
-                        if (isBetweenUs) appendMessageUI(msg);
-                    }
-                });
+            if (!requests || requests.length === 0) {
+                reqListEl.innerHTML = `<p class="text-xs text-gray-400">Không có lời mời nào.</p>`;
+                return;
             }
-        }
 
-        function appendMessageUI(msg) {
-            const container = document.getElementById('message-container');
-            const isMe = msg.sender_id === currentUser.id;
-            const div = document.createElement('div');
-            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
-            div.innerHTML = `
-                <div class="max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none shadow-sm'}">
-                    ${!isMe ? `<div class="text-xs font-bold text-blue-500 mb-1">${escapeHtml(msg.sender_name)}</div>` : ''}
-                    <div>${escapeHtml(msg.content)}</div>
-                </div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
+            const senderIds = requests.map(r => r.sender_id);
+            const { data: senders } = await supabaseClient.from('custom_users').select('*').in('id', senderIds);
 
-        async function sendMessage() {
-            const input = document.getElementById('message-input');
-            const content = input.value.trim();
-            if (!content) return;
-
-            await supabaseClient.from('messages').insert({
-                sender_id: currentUser.id,
-                sender_name: currentUser.display_name,
-                content: content,
-                receiver_id: currentRecipient ? currentRecipient.id : null
+            let html = '';
+            requests.forEach(req => {
+                const sender = senders.find(s => s.id === req.sender_id);
+                if (sender) {
+                    html += `
+                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border text-sm">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs">${sender.display_name.charAt(0)}</div>
+                                <span class="font-medium text-gray-800">${escapeHtml(sender.display_name)}</span>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button onclick="acceptRequest(${req.id})" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">Đồng ý</button>
+                                <button onclick="rejectRequest(${req.id})" class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-300">Xóa</button>
+                            </div>
+                        </div>
+                    `;
+                }
             });
-
-            input.value = '';
+            reqListEl.innerHTML = html;
         }
 
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
+        // Tìm kiếm người dùng khác để kết bạn
+        async function searchUsers(keyword) {
+            const resultsEl = document.getElementById('search-results-list');
+            const { data: users } = await supabaseClient.from('custom_users').select('*').neq('id', currentUser.id);
 
-        function subscribeMessages() {
-            if (messageSubscription) supabaseClient.removeChannel(messageSubscription);
-            
-            messageSubscription = supabaseClient
-                .channel('public:messages')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                    const msg = payload.new;
-                    if (!currentRecipient && !msg.receiver_id) {
-                        appendMessageUI(msg);
-                    } else if (currentRecipient && (
-                        (msg.sender_id === currentUser.id && msg.receiver_id === currentRecipient.id) ||
-                        (msg.sender_id === currentRecipient.id && msg.receiver_id === currentUser.id)
-                    )) {
-                        appendMessageUI(msg);
-                    }
-                })
-                .subscribe();
-        }
+            if (!users) return;
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        }
+            // Lấy danh sách quan hệ hiện tại để kiểm tra trạng thái kết bạn
+            const { data: relations } = await supabaseClient
+                .from('friend_requests')
+                .select('*')
+                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
 
-        // Khởi chạy kiểm tra phiên đăng nhập khi mở web
-        checkUserSession();
-    </script>
-</body>
-                                                                                                                                                                  </html>
-                                                                                                                                                                  
+            let html = '';
+            users.forEach(u => {
+                if (keyword && !u.display_name.toLowerCase().includes(keyword.toLowerCase()) && !u.username.toLowerCase().includes(keyword.toLowerCase())) {
+                    return;
+                }
+
+                // Kiểm tra trạng thái quan hệ
+                let status = 'none'; // none, pending_sent, pending_received, accepted
+                let relationId = null
