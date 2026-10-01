@@ -3,97 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zalo Web - Đăng nhập</title>
+    <title>Zalo Web Dynamic</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gradient-to-br from-blue-500 to-blue-700 h-screen flex items-center justify-center">
+<body class="bg-gray-100 h-screen overflow-hidden font-sans">
 
-    <div class="bg-white p-8 rounded-xl shadow-2xl w-96 max-w-full mx-4">
-        <div class="text-center mb-6">
-            <div class="inline-block bg-blue-600 text-white font-bold text-2xl px-4 py-2 rounded-lg mb-2 shadow">ZALO</div>
-            <h1 class="text-xl font-bold text-gray-800" id="auth-title">Đăng nhập tài khoản</h1>
-        </div>
-        
-        <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm"></div>
+    <!-- CẤU HÌNH SUPABASE TỰ ĐỘNG -->
+    <script>
+        const SUPABASE_URL = 'https://qcgwmdsreduajcruktgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
 
-        <form id="auth-form" onsubmit="handleAuth(event)">
-            <div id="name-field" class="mb-4 hidden">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Tên hiển thị</label>
-                <input type="text" id="auth-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ví dụ: Nguyễn Văn A">
+    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <div id="auth-screen" class="flex items-center justify-center h-screen bg-gradient-to-r from-blue-500 to-indigo-600">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-blue-600 mb-1">Zalo Dynamic</h1>
+                <p class="text-gray-500 text-sm">Kết nối bạn bè nhanh chóng, thời gian thực</p>
             </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập</label>
-                <input type="text" id="auth-username" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập tên đăng nhập">
-            </div>
-            <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
-                <input type="password" id="auth-password" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập mật khẩu">
-            </div>
-            <button type="submit" id="auth-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Đăng Nhập</button>
-        </form>
 
-        <div class="mt-4 text-center">
-            <button onclick="toggleAuthMode()" id="auth-switch" class="text-sm text-blue-600 hover:underline">Chưa có tài khoản? Đăng ký ngay</button>
+            <!-- Tab Switcher -->
+            <div class="flex border-b mb-6">
+                <button id="tab-login-btn" onclick="switchTab('login')" class="flex-1 pb-2 font-semibold text-blue-600 border-b-2 border-blue-600">Đăng nhập</button>
+                <button id="tab-register-btn" onclick="switchTab('register')" class="flex-1 pb-2 font-semibold text-gray-400">Đăng ký</button>
+            </div>
+
+            <!-- Form Đăng nhập -->
+            <div id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên tài khoản</label>
+                    <input type="text" id="login-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập tên tài khoản...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <input type="password" id="login-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập mật khẩu...">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Đăng Nhập</button>
+            </div>
+
+            <!-- Form Đăng ký -->
+            <div id="register-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên tài khoản mới</label>
+                    <input type="text" id="reg-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Chọn tên tài khoản...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <input type="password" id="reg-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Mật khẩu bảo mật...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Chọn Avatar đại diện</label>
+                    <div class="flex gap-2 justify-center py-2" id="avatar-picker">
+                        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix" class="w-12 h-12 rounded-full cursor-pointer border-2 border-blue-500 p-1 avatar-opt active" data-avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix">
+                        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka" class="w-12 h-12 rounded-full cursor-pointer border-2 border-transparent p-1 avatar-opt" data-avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka">
+                        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Zack" class="w-12 h-12 rounded-full cursor-pointer border-2 border-transparent p-1 avatar-opt" data-avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Zack">
+                        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Mimi" class="w-12 h-12 rounded-full cursor-pointer border-2 border-transparent p-1 avatar-opt" data-avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Mimi">
+                    </div>
+                </div>
+                <button onclick="handleRegister()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Đăng Ký</button>
+            </div>
+            <p id="auth-error" class="text-red-500 text-sm mt-3 text-center"></p>
         </div>
     </div>
 
+    <!-- MÀN HÌNH CHAT CHÍNH (ZALO WEB) -->
+    <div id="main-screen" class="flex h-screen hidden">
+        <!-- Thanh điều hướng trái (Sidebar) -->
+        <div class="w-16 bg-blue-700 flex flex-col items-center py-4 justify-between">
+            <div class="flex flex-col items-center space-y-6">
+                <img id="my-avatar" src="" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+                <button onclick="switchMainTab('chats')" id="nav-chats" class="text-white text-xl p-3 rounded-lg bg-blue-800 transition"><i class="fa-solid fa-message"></i></button>
+                <button onclick="switchMainTab('contacts')" id="nav-contacts" class="text-blue-300 text-xl p-3 rounded-lg hover:bg-blue-800 transition"><i class="fa-solid fa-address-book"></i></button>
+            </div>
+            <button onclick="handleLogout()" class="text-blue-200 hover:text-white text-xl p-3"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+
+        <!-- Bảng điều khiển phụ bên trái (Danh sách chat hoặc Danh bạ) -->
+        <div class="w-80 bg-white border-r flex flex-col">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h2 id="sidebar-title" class="text-xl font-bold text-gray-800">Trò chuyện</h2>
+                <button onclick="openCreateGroupModal()" id="btn-create-group" class="hidden text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded font-medium hover:bg-blue-200"><i class="fa-solid fa-users-plus"></i> Tạo nhóm</button>
+            </div>
+
+            <!-- Thanh tìm kiếm -->
+            <div class="p-3 border-b">
+                <div class="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
+                    <i class="fa-solid fa-search text-gray-400 mr-2"></i>
+                    <input type="text" id="search-input" oninput="handleSearchInput()" placeholder="Tìm kiếm bạn bè..." class="bg-transparent w-full text-sm focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Khu vực hiển thị danh sách (Chat list / Contacts / Search results) -->
+            <div id="sidebar-content" class="flex-1 overflow-y-auto divide-y">
+                <!-- Nội dung được render bằng JavaScript -->
+            </div>
+        </div>
+
+        <!-- Khung chat chính giữa / bên phải -->
+        <div id="chat-area" class="flex-1 flex flex-col bg-gray-50">
+            <div class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                <i class="fa-regular fa-comments text-6xl mb-3"></i>
+                <p>Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tạo Nhóm Chat -->
+    <div id="group-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
+            <h3 class="text-lg font-bold mb-4">Tạo nhóm trò chuyện mới</h3>
+            <input type="text" id="group-name-input" placeholder="Nhập tên nhóm..." class="w-full px-3 py-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-sm font-medium text-gray-600 mb-2">Chọn thành viên bạn bè:</p>
+            <div id="group-members-list" class="max-h-48 overflow-y-auto border rounded-lg p-2 mb-4 space-y-2">
+                <!-- Danh sách bạn bè để tích chọn -->
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeCreateGroupModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">Hủy</button>
+                <button onclick="submitCreateGroup()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Tạo nhóm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUser = null;
+        let selectedAvatar = "https://api.dicebear.com/7.x/adventurer/svg?seed=Felix";
+        let currentMainTab = 'chats';
+        let currentConversation = null;
 
-        let isSignUp = false;
+        // Chọn avatar trong form đăng ký
+        document.querySelectorAll('.avatar-opt').forEach(img => {
+            img.addEventListener('click', (e) => {
+                document.querySelectorAll('.avatar-opt').forEach(i => i.classList.remove('border-blue-500'));
+                e.target.classList.add('border-blue-500');
+                selectedAvatar = e.target.getAttribute('data-avatar');
+            });
+        });
 
-        function toggleAuthMode() {
-            isSignUp = !isSignUp;
-            document.getElementById('auth-title').innerText = isSignUp ? 'Đăng ký tài khoản mới' : 'Đăng nhập tài khoản';
-            document.getElementById('auth-btn').innerText = isSignUp ? 'Đăng Ký' : 'Đăng Nhập';
-            document.getElementById('auth-switch').innerText = isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay';
-            document.getElementById('name-field').classList.toggle('hidden', !isSignUp);
-            document.getElementById('auth-error').classList.add('hidden');
-        }
-
-        async function handleAuth(e) {
-            e.preventDefault();
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value;
-            const displayName = document.getElementById('auth-name').value.trim();
-            const errorDiv = document.getElementById('auth-error');
-            errorDiv.classList.add('hidden');
-
-            try {
-                if (isSignUp) {
-                    if (!displayName) throw new Error('Vui lòng nhập tên hiển thị!');
-                    const { data: existing } = await supabaseClient.from('custom_users').select('*').eq('username', username).single();
-                    if (existing) throw new Error('Tên đăng nhập này đã được sử dụng!');
-
-                    const { error } = await supabaseClient.from('custom_users').insert({ username, display_name: displayName, password });
-                    if (error) throw error;
-
-                    alert('Đăng ký thành công! Hãy đăng nhập ngay.');
-                    toggleAuthMode();
-                } else {
-                    const { data, error } = await supabaseClient
-                        .from('custom_users').select('*')
-                        .eq('username', username).eq('password', password).single();
-
-                    if (error || !data) throw new Error('Sai tên đăng nhập hoặc mật khẩu!');
-
-                    localStorage.setItem('zalo_user', JSON.stringify(data));
-                    window.location.href = 'chats.html'; // Chuyển sang trang danh sách chat
-                }
-            } catch (err) {
-                errorDiv.innerText = err.message;
-                errorDiv.classList.remove('hidden');
+        function switchTab(tab) {
+            if(tab === 'login') {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+                document.getElementById('tab-login-btn').className = "flex-1 pb-2 font-semibold text-blue-600 border-b-2 border-blue-600";
+                document.getElementById('tab-register-btn').className = "flex-1 pb-2 font-semibold text-gray-400";
+            } else {
+                document.getElementById('register-form').classList.remove('hidden');
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('tab-register-btn').className = "flex-1 pb-2 font-semibold text-blue-600 border-b-2 border-blue-600";
+                document.getElementById('tab-login-btn').className = "flex-1 pb-2 font-semibold text-gray-400";
             }
         }
 
-        // Nếu đã đăng nhập thì đá thẳng sang trang danh sách chat
-        if (localStorage.getItem('zalo_user')) {
-            window.location.href = 'chats.html';
-        }
-    </script>
-</body>
-</html>
+        async function handleRegister() {
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const errEl = document.getElementById('auth-error');
 
+            if(!username || !password) {
+                errEl.innerText = "Vui lòng nhập đầy đủ thông tin!";
+                return;
+            }
+
+            const { error } = await supabase.from('users').insert([{ username, password, avatar: selectedAvatar }]);
+            if(error) {
+                errEl.innerText = "Tên tài khoản đã tồn tại!";
+            } else {
+                alert("Đăng ký thành công! Hãy đăng nhập.");
+                switchTab('login');
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errEl = document.getElementById('auth-error');
+
+            const { data, error } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single();
+            if(error || !data) {
+                errEl.innerText = "Sai tên tài khoản hoặc mật khẩu!";
+            } else {
+                currentUser = data;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                document.getElementById('my-avatar').src = currentUser.avatar;
+                initApp();
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            location.reload();
+        }
+
+        function switchMainTab(tab) {
+            currentMainTab = tab;
+            document.getElementById('nav-chats').className = tab === 'chats' ? "text-white text-xl p-3 rounded-lg bg-blue-800 transition" : "text-blue-300 text-xl p-3 rounded-lg hover:bg-blue-800 transition";
+            document.getElementById('nav-contacts').className = tab === 'contacts' ? "text-white text-xl p-3 rounded-lg bg-blue-800 transition" : "text-blue-300 text-xl p-3 rounded-lg hover:bg-blue-800 transition";
+            
+            document.getElementById('sidebar-title').innerText = tab === 'chats' ? "Trò chuyện" : "Danh bạ";
+            document.getElementById('btn-create-group').classList.toggle('hidden', tab !== 'chats');
+            
+            loadSidebarContent();
+        }
+
+        async function initApp() {
+            loadSidebarContent();
+            // Lắng nghe realtime kết bạn & tin nhắn
+            supabase.channel('public-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+                    loadSidebarContent();
+                    if(currentConversation) loadMessages(currentConversation.id);
+                })
+                .subscribe();
+        }
+
+        async function loadSidebarContent() {
+            const container = document.getElementById('sidebar-content');
+            container.innerHTML = "";
+
+            if(currentMainTab === 'chats') {
+                const { data: mems } = await supabase.from('conversation_members').select('conversation_id').eq('user_id', currentUser.id);
+                if(!mems || mems.length === 0) {
+                    container.innerHTML = `<div class="p-4 text-center text-gray-400 text-sm">Chưa có cuộc trò chuyện nào</div>`;
+                    return;
+                }
+                const convIds = mems.map(m => m.conversation_id);
+                const { data: convs } = await supabase.from('conversations').select('*').in('id', convIds);
+                
+                for(let conv of convs) {
+                    let displayName = conv.name;
+                    let displayAvatar = "https://api.dicebear.com/7.x/identicon/svg?seed=group";
+                    
+                    if(!conv.is_group) {
+                        const { data: otherMems } = await supabase.from('conversation_members').select('user_id').eq('conversation_id', conv.id).neq('user_id', currentUser.id);
+                        if(otherMems && otherMems.length > 0) {
+                            const { data: uData } = await supabase.from('users').select('*').eq('id', otherMems[0].user_id).single();
+                            if(uData) {
+                                displayName = uData.username;
+                                displayAvatar = uData.avatar;
+                            }
+                        }
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = "flex items-center p-3 hover:bg-gray-100 cursor-pointer transition";
+                    div.innerHTML = `
+                        <img src="${displayAvatar}" class="w-12 h-12 rounded-full object-cover mr-3">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-800 truncate">${displayName}</h4>
+                            <p class="text-xs text-gray-500 truncate">${conv.is_group ? 'Nhóm trò chuyện' : 'Nhấn để nhắn tin'}</p>
+                        </div>
+                    `;
+                    div.onclick = () => openConversation(conv, displayName, displayAvatar);
+                    container.appendChild(div);
+                }
+            } else {
+                container.innerHTML = `<div class="p-2 font-bold text-xs text-gray-400 uppercase bg-gray-50">Lời mời kết bạn</div>`;
+                const { data: reqs } = await supabase.from('friend_requests').select('*, users!friend_requests_sender_id_fkey(*)').eq('receiver_id', currentUser.id).eq('status', 'pending');
+                
+                if(reqs && reqs.length > 0) {
+                    reqs.forEach(req => {
+                        const div = document.createElement('div');
+                        div.className = "p-3 flex items-center justify-between";
+                        div.innerHTML = `
+                            <div class="flex items-center">
+                                <img src="${req.users.avatar}" class="w-10 h-10 rounded-full mr-3">
+                                <span class="font-semibold text-sm">${req.users.username}</span>
+                            </div>
+                            <div class="space-x-1">
+                                <button onclick="acceptFriend('${req.id}', '${req.sender_id}')" class="bg-blue-600 text-white px-2 py-1 text-xs rounded">Đồng ý</button>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML += `<div class="p-3 text-xs text-gray-400 italic">Không có lời mời kết bạn nào</div>`;
+                }
+
+                container.innerHTML += `<div class="p-2 font-bold text-xs text-gray-400 uppercase bg-gray-50 mt-2">Danh sách bạn bè đã kết nối</div>`;
+                const { data: friends1 } = await supabase.from('friend_requests').select('receiver_id').eq('sender_id', currentUser.id).eq('status', 'accepted');
+                const { data: friends2 } = await supabase.from('friend_requests').select('sender_id').eq('receiver_id', currentUser.id).eq('status', 'accepted');
+                
+                let friendIds = [];
+                if(friends1) friendIds.push(...friends1.map(f => f.receiver_id));
+                if(friends2) friendIds.push(...friends2.map(f => f.sender_id));
+
+                if(friendIds.length > 0) {
+                    const { data: friendUsers } = await supabase.from('users').select('*').in('id', friendIds);
+                    friendUsers.forEach(f => {
+                        const div = document.createElement('div');
+                        div.className = "flex items-center p-3 hover:bg-gray-100 cursor-pointer transition";
+                        div.innerHTML = `
+                            <img src="${f.avatar}" class="w-10 h-10 rounded-full mr-3">
+                            <span class="font-semibold text-sm text-gray-800">${f.username}</span>
+                        `;
+                        div.onclick = () => startDirectChat(f);
+                        container.appendChild(div);
+                    });
+                }
+            }
+        }
+
+        async function handleSearchInput() {
+            const query = document.getElementById('search-input').value.trim();
+            if(!query || currentMainTab !== 'contacts') return;
+            
+            const container = document.getElementById('sidebar-content');
+            const { data: users } = await supabase.from('users').select('*').ilike('username', `%${query}%`).neq('id', currentUser.id);
+            
+            container.innerHTML = `<div class="p-2 font-bold text-xs text-gray-400 uppercase bg-gray-50">Kết quả tìm kiếm</div>`;
+            if(users && users.length > 0) {
+                users.forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 flex items-center justify-between";
+                    div.innerHTML = `
+                        <div class="flex items-center">
+                            <img src="${u.avatar}" class="w-10 h-10 rounded-full mr-3">
+                            <span class="font-semibold text-sm">${u.username}</span>
+                        </div>
+                        <bu
