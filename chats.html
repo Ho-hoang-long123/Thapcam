@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zalo Web - Danh sách tin nhắn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden flex">
+
+    <!-- Sidebar Navigation -->
+    <div class="w-16 bg-blue-600 flex flex-col items-center py-4 justify-between text-white flex-shrink-0">
+        <div class="flex flex-col items-center space-y-6">
+            <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg shadow" id="user-initial">Z</div>
+            <button class="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center text-xl shadow"><i class="fa-solid fa-message"></i></button>
+        </div>
+        <div>
+            <button onclick="logout()" title="Đăng xuất" class="w-10 h-10 rounded-lg hover:bg-red-600 flex items-center justify-center text-xl text-blue-200 hover:text-white transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+    </div>
+
+    <!-- Sidebar Chats & Users List -->
+    <div class="w-full md:w-96 bg-white border-r flex flex-col flex-shrink-0 h-full">
+        <div class="p-4 border-b flex items-center justify-between bg-gray-50">
+            <h2 class="font-bold text-gray-800 text-base truncate" id="my-profile-name">Đang tải...</h2>
+        </div>
+        <div class="p-3 border-b flex items-center space-x-2">
+            <div class="flex-1 bg-gray-100 flex items-center px-3 py-1.5 rounded-lg">
+                <i class="fa-solid fa-search text-gray-400 mr-2 text-sm"></i>
+                <input type="text" placeholder="Tìm kiếm" class="bg-transparent text-sm focus:outline-none w-full">
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto" id="user-list"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://qcgwmdsreduajcruktgm.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZ3dtZHNyZWR1YWpjcnVrdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjAyMjksImV4cCI6MjEwNjIzNjIyOX0.GwpOaWOacqmHF2SwMDas2efp_w4-mFLoWMc_DlZUUe8";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = JSON.parse(localStorage.getItem('zalo_user'));
+
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('user-initial').innerText = currentUser.display_name.charAt(0).toUpperCase();
+            document.getElementById('my-profile-name').innerText = currentUser.display_name;
+            loadUsersAndRooms();
+        }
+
+        function logout() {
+            localStorage.removeItem('zalo_user');
+            window.location.href = 'login.html';
+        }
+
+        async function loadUsersAndRooms() {
+            const userListEl = document.getElementById('user-list');
+            
+            let html = `
+                <div onclick="openChatRoom('general', 'Phòng Chat Chung')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b bg-blue-50">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 shadow"><i class="fa-solid fa-users"></i></div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Phòng Chat Chung</h4>
+                        <p class="text-xs text-gray-500">Trò chuyện với mọi người</p>
+                    </div>
+                </div>
+                <div class="p-3 text-xs text-gray-400 font-bold uppercase bg-gray-50 border-b">Danh sách bạn bè</div>
+            `;
+
+            const { data: users } = await supabaseClient.from('custom_users').select('*');
+            
+            if (users) {
+                users.forEach(u => {
+                    if (u.id !== currentUser.id) {
+                        html += `
+                            <div onclick="openChatRoom('${u.id}', '${escapeHtml(u.display_name)}')" class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b">
+                                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-3">${u.display_name.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-sm">${escapeHtml(u.display_name)}</h4>
+                                    <p class="text-xs text-green-500">Nhấn để nhắn tin riêng</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            userListEl.innerHTML = html;
+        }
+
+        function openChatRoom(recipientId, recipientName) {
+            // Lưu thông tin người nhận vào sessionStorage để trang chat nhận diện
+            sessionStorage.setItem('chat_recipient_id', recipientId);
+            sessionStorage.setItem('chat_recipient_name', recipientName);
+            window.location.href = 'chat-room.html';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
